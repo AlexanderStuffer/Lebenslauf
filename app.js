@@ -2422,6 +2422,38 @@
     return pages;
   }
 
+  function renderCanvasWithTimeout(renderFn, timeoutMs, label) {
+    return new Promise(function (resolve, reject) {
+      let finished = false;
+      const timerId = window.setTimeout(function () {
+        if (finished) {
+          return;
+        }
+        finished = true;
+        reject(new Error(label + " timed out"));
+      }, timeoutMs);
+
+      Promise.resolve()
+        .then(renderFn)
+        .then(function (result) {
+          if (finished) {
+            return;
+          }
+          finished = true;
+          window.clearTimeout(timerId);
+          resolve(result);
+        })
+        .catch(function (error) {
+          if (finished) {
+            return;
+          }
+          finished = true;
+          window.clearTimeout(timerId);
+          reject(error);
+        });
+    });
+  }
+
   async function buildPrintPayload(fileName) {
     const html2canvas = window.html2canvas;
     if (typeof html2canvas !== "function") {
@@ -2468,28 +2500,40 @@
 
       let canvas = null;
       try {
-        canvas = await html2canvas(exportPaper, {
-          scale: captureScale,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          foreignObjectRendering: true,
-          windowWidth: exportPaper.scrollWidth,
-          windowHeight: exportPaper.scrollHeight,
-          scrollX: 0,
-          scrollY: 0
-        });
+        canvas = await renderCanvasWithTimeout(
+          function () {
+            return html2canvas(exportPaper, {
+              scale: captureScale,
+              useCORS: true,
+              backgroundColor: "#ffffff",
+              foreignObjectRendering: true,
+              windowWidth: exportPaper.scrollWidth,
+              windowHeight: exportPaper.scrollHeight,
+              scrollX: 0,
+              scrollY: 0
+            });
+          },
+          15000,
+          "foreignObject render"
+        );
       } catch (foError) {
         console.warn("foreignObject render failed, fallback to standard canvas render", foError);
-        canvas = await html2canvas(exportPaper, {
-          scale: captureScale,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          foreignObjectRendering: false,
-          windowWidth: exportPaper.scrollWidth,
-          windowHeight: exportPaper.scrollHeight,
-          scrollX: 0,
-          scrollY: 0
-        });
+        canvas = await renderCanvasWithTimeout(
+          function () {
+            return html2canvas(exportPaper, {
+              scale: captureScale,
+              useCORS: true,
+              backgroundColor: "#ffffff",
+              foreignObjectRendering: false,
+              windowWidth: exportPaper.scrollWidth,
+              windowHeight: exportPaper.scrollHeight,
+              scrollX: 0,
+              scrollY: 0
+            });
+          },
+          15000,
+          "standard render"
+        );
       }
 
       const pageImages = sliceCanvasIntoPages(canvas);
@@ -2539,20 +2583,29 @@
       };
 
       let delivered = false;
+      let directDeliveryAllowed = true;
 
       const tryDeliver = function () {
         if (!printWindow || printWindow.closed) {
           return;
         }
-        try {
-          if (typeof printWindow.receiveCvPayload === "function") {
-            delivered = true;
-            printWindow.receiveCvPayload(payloadMessage.payload);
-            return;
+        if (directDeliveryAllowed) {
+          try {
+            if (typeof printWindow.receiveCvPayload === "function") {
+              delivered = true;
+              printWindow.receiveCvPayload(payloadMessage.payload);
+              return;
+            }
+          } catch (directError) {
+            // Some browser/security contexts block direct property access across windows.
+            directDeliveryAllowed = false;
+            console.warn("Direct print payload delivery unavailable, switching to postMessage", directError);
           }
-          printWindow.postMessage({ type: "cv-print-ping" }, "*");
+        }
+        try {
+          printWindow.postMessage(payloadMessage, "*");
         } catch (deliveryError) {
-          console.warn("Failed to deliver print payload", deliveryError);
+          console.warn("Failed to deliver print payload via postMessage", deliveryError);
         }
       };
 

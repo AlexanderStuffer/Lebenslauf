@@ -6,14 +6,23 @@
       email: "",
       phone: "",
       location: "",
+      address: "",
+      birthDate: "",
       website: "",
       photoUrl: "",
       photoDataUrl: "",
       summary: "",
-      skills: ""
+      skills: "",
+      interests: "",
+      volunteer: "",
+      references: ""
     },
     experiences: [],
+    internships: [],
     education: [],
+    languages: [],
+    knowledgeItems: [],
+    certifications: [],
     projects: [],
     customFields: [],
     custom: {
@@ -33,13 +42,18 @@
       density: "1",
       layoutElement: "profile",
       elementDragEnabled: false,
-      elementLayouts: {}
+      elementLayouts: {},
+      visibleSections: {}
     }
   };
 
   const form = document.getElementById("cvForm");
   const experienceList = document.getElementById("experienceList");
+  const internshipList = document.getElementById("internshipList");
   const educationList = document.getElementById("educationList");
+  const languageList = document.getElementById("languageList");
+  const knowledgeList = document.getElementById("knowledgeList");
+  const certificationList = document.getElementById("certificationList");
   const projectList = document.getElementById("projectList");
   const customFieldList = document.getElementById("customFieldList");
   const previewPaper = document.getElementById("previewPaper");
@@ -68,7 +82,11 @@
   if (
     !form ||
     !experienceList ||
+    !internshipList ||
     !educationList ||
+    !languageList ||
+    !knowledgeList ||
+    !certificationList ||
     !projectList ||
     !customFieldList ||
     !previewPaper ||
@@ -104,15 +122,49 @@
     { id: "contact", label: "Header: Kontaktzeile" },
     { id: "profile", label: "Profilbereich" },
     { id: "experience", label: "Berufserfahrung" },
+    { id: "internships", label: "Praktika" },
     { id: "projects", label: "Projekte" },
     { id: "skills", label: "Skills" },
+    { id: "languages", label: "Sprachen" },
+    { id: "knowledge", label: "Kenntnisse" },
+    { id: "certifications", label: "Zertifizierungen" },
     { id: "education", label: "Ausbildung" },
-    { id: "customSidebar", label: "Eigene Felder (Sidebar)" },
-    { id: "customContent", label: "Eigene Felder (Hauptbereich)" }
+    { id: "interests", label: "Interessen" },
+    { id: "volunteer", label: "Ehrenamt" },
+    { id: "references", label: "Referenzen" },
+    { id: "customSidebar", label: "Kategorien (Sidebar)" },
+    { id: "customContent", label: "Kategorien (Hauptbereich)" }
   ];
   const layoutElementIds = layoutElementDefs.map(function (item) {
     return item.id;
   });
+
+  const visibilityDefaults = {
+    showPhoto: true,
+    showName: true,
+    showHeadline: true,
+    showPhone: true,
+    showEmail: true,
+    showLocation: true,
+    showAddress: false,
+    showBirthDate: false,
+    showWebsite: true,
+    showProfile: true,
+    showExperience: true,
+    showInternships: false,
+    showEducation: true,
+    showSkills: true,
+    showLanguages: true,
+    showKnowledge: true,
+    showCertifications: false,
+    showProjects: true,
+    showInterests: true,
+    showVolunteer: false,
+    showReferences: false,
+    showCustomSidebar: true,
+    showCustomContent: true
+  };
+  const visibilityKeys = Object.keys(visibilityDefaults);
 
   function uid(prefix) {
     return prefix + "-" + Math.random().toString(36).slice(2, 10);
@@ -361,6 +413,44 @@
     };
   }
 
+  function defaultInternship() {
+    return {
+      id: uid("intern"),
+      role: "",
+      company: "",
+      location: "",
+      start: "",
+      end: "",
+      description: ""
+    };
+  }
+
+  function defaultLanguage() {
+    return {
+      id: uid("lang"),
+      name: "",
+      level: ""
+    };
+  }
+
+  function defaultKnowledgeItem() {
+    return {
+      id: uid("know"),
+      name: "",
+      level: "3"
+    };
+  }
+
+  function defaultCertification() {
+    return {
+      id: uid("cert"),
+      title: "",
+      issuer: "",
+      date: "",
+      details: ""
+    };
+  }
+
   function defaultProject() {
     return {
       id: uid("proj"),
@@ -396,6 +486,21 @@
     };
   }
 
+  function createDefaultVisibilitySettings() {
+    return Object.assign({}, visibilityDefaults);
+  }
+
+  function ensureVisibilitySettings() {
+    if (!state.custom.visibleSections || typeof state.custom.visibleSections !== "object") {
+      state.custom.visibleSections = createDefaultVisibilitySettings();
+    }
+    visibilityKeys.forEach(function (key) {
+      if (typeof state.custom.visibleSections[key] !== "boolean") {
+        state.custom.visibleSections[key] = visibilityDefaults[key];
+      }
+    });
+  }
+
   function stateFileNameBase() {
     return String(state.basics.fullName || "lebenslauf")
       .trim()
@@ -424,11 +529,58 @@
       email: textOrEmpty(source.email),
       phone: textOrEmpty(source.phone),
       location: textOrEmpty(source.location),
+      address: textOrEmpty(source.address),
+      birthDate: textOrEmpty(source.birthDate),
       website: textOrEmpty(source.website),
       photoUrl: textOrEmpty(source.photoUrl),
       photoDataUrl: textOrEmpty(source.photoDataUrl),
       summary: textOrEmpty(source.summary),
-      skills: textOrEmpty(source.skills)
+      skills: textOrEmpty(source.skills),
+      interests: textOrEmpty(source.interests),
+      volunteer: textOrEmpty(source.volunteer),
+      references: textOrEmpty(source.references)
+    };
+  }
+
+  function normalizeInternship(rawEntry) {
+    const source = rawEntry && typeof rawEntry === "object" ? rawEntry : {};
+    return {
+      id: textOrEmpty(source.id) || uid("intern"),
+      role: textOrEmpty(source.role),
+      company: textOrEmpty(source.company),
+      location: textOrEmpty(source.location),
+      start: textOrEmpty(source.start),
+      end: textOrEmpty(source.end),
+      description: textOrEmpty(source.description)
+    };
+  }
+
+  function normalizeLanguage(rawEntry) {
+    const source = rawEntry && typeof rawEntry === "object" ? rawEntry : {};
+    return {
+      id: textOrEmpty(source.id) || uid("lang"),
+      name: textOrEmpty(source.name),
+      level: textOrEmpty(source.level)
+    };
+  }
+
+  function normalizeKnowledgeItem(rawEntry) {
+    const source = rawEntry && typeof rawEntry === "object" ? rawEntry : {};
+    return {
+      id: textOrEmpty(source.id) || uid("know"),
+      name: textOrEmpty(source.name),
+      level: String(Math.round(safeNumber(source.level, 3, 1, 5)))
+    };
+  }
+
+  function normalizeCertification(rawEntry) {
+    const source = rawEntry && typeof rawEntry === "object" ? rawEntry : {};
+    return {
+      id: textOrEmpty(source.id) || uid("cert"),
+      title: textOrEmpty(source.title),
+      issuer: textOrEmpty(source.issuer),
+      date: textOrEmpty(source.date),
+      details: textOrEmpty(source.details)
     };
   }
 
@@ -496,6 +648,13 @@
 
   function normalizeCustom(rawCustom) {
     const source = rawCustom && typeof rawCustom === "object" ? rawCustom : {};
+    const rawVisibleSections = source.visibleSections && typeof source.visibleSections === "object" ? source.visibleSections : {};
+    const visibleSections = createDefaultVisibilitySettings();
+    visibilityKeys.forEach(function (key) {
+      if (typeof rawVisibleSections[key] === "boolean") {
+        visibleSections[key] = rawVisibleSections[key];
+      }
+    });
     return {
       layoutMode: sanitizeOption(textOrEmpty(source.layoutMode) || "sidebar", ["sidebar", "top"], "sidebar"),
       templateMode: sanitizeOption(textOrEmpty(source.templateMode) || "modern", ["modern", "classic", "minimal"], "modern"),
@@ -513,7 +672,8 @@
       density: sanitizeOption(textOrEmpty(source.density) || "1", ["0", "1", "2"], "1"),
       layoutElement: sanitizeOption(textOrEmpty(source.layoutElement) || "profile", layoutElementIds, "profile"),
       elementDragEnabled: Boolean(source.elementDragEnabled),
-      elementLayouts: normalizeElementLayoutsMap(source.elementLayouts)
+      elementLayouts: normalizeElementLayoutsMap(source.elementLayouts),
+      visibleSections: visibleSections
     };
   }
 
@@ -522,7 +682,11 @@
     return {
       basics: normalizeBasics(source.basics),
       experiences: Array.isArray(source.experiences) ? source.experiences.map(normalizeExperience) : [],
+      internships: Array.isArray(source.internships) ? source.internships.map(normalizeInternship) : [],
       education: Array.isArray(source.education) ? source.education.map(normalizeEducation) : [],
+      languages: Array.isArray(source.languages) ? source.languages.map(normalizeLanguage) : [],
+      knowledgeItems: Array.isArray(source.knowledgeItems) ? source.knowledgeItems.map(normalizeKnowledgeItem) : [],
+      certifications: Array.isArray(source.certifications) ? source.certifications.map(normalizeCertification) : [],
       projects: Array.isArray(source.projects) ? source.projects.map(normalizeProject) : [],
       customFields: Array.isArray(source.customFields) ? source.customFields.map(normalizeCustomField) : [],
       custom: normalizeCustom(source.custom)
@@ -546,7 +710,11 @@
 
     state.basics = normalized.basics;
     state.experiences = normalized.experiences;
+    state.internships = normalized.internships;
     state.education = normalized.education;
+    state.languages = normalized.languages;
+    state.knowledgeItems = normalized.knowledgeItems;
+    state.certifications = normalized.certifications;
     state.projects = normalized.projects;
     state.customFields = normalized.customFields;
     state.custom = normalized.custom;
@@ -616,7 +784,7 @@
       renderPreview();
     } catch (error) {
       console.error(error);
-      window.alert("JSON konnte nicht geladen werden. Bitte pruefe das Dateiformat.");
+      window.alert("JSON konnte nicht geladen werden. Bitte prüfe das Dateiformat.");
     } finally {
       fileInput.value = "";
     }
@@ -671,7 +839,7 @@
           <input data-entry-field="degree" data-id="${entry.id}" data-kind="education" type="text" value="${escapeHtml(entry.degree)}" placeholder="B.Sc. Informatik">
         </label>
         <label>Schule / Hochschule
-          <input data-entry-field="school" data-id="${entry.id}" data-kind="education" type="text" value="${escapeHtml(entry.school)}" placeholder="Universitaet Musterstadt">
+          <input data-entry-field="school" data-id="${entry.id}" data-kind="education" type="text" value="${escapeHtml(entry.school)}" placeholder="Universität Musterstadt">
         </label>
         <label>Zeitraum Start
           <input data-entry-field="start" data-id="${entry.id}" data-kind="education" type="text" value="${escapeHtml(entry.start)}" placeholder="10/2018">
@@ -682,6 +850,112 @@
       </div>
       <label>Details
         <textarea data-entry-field="description" data-id="${entry.id}" data-kind="education" rows="3" placeholder="Schwerpunkte, Abschlussnote, besondere Leistungen.">${escapeHtml(entry.description)}</textarea>
+      </label>
+    `;
+    return wrapper;
+  }
+
+  function createInternshipCard(entry, index) {
+    const wrapper = document.createElement("article");
+    wrapper.className = "entry-card";
+    wrapper.dataset.id = entry.id;
+    wrapper.dataset.type = "internship";
+    wrapper.innerHTML = `
+      <div class="entry-head">
+        <strong>Praktikum ${index + 1}</strong>
+        <button type="button" class="danger-btn" data-remove="internship" data-id="${entry.id}">Entfernen</button>
+      </div>
+      <div class="field-grid">
+        <label>Rolle
+          <input data-entry-field="role" data-id="${entry.id}" data-kind="internship" type="text" value="${escapeHtml(entry.role)}" placeholder="Praktikant Frontend">
+        </label>
+        <label>Unternehmen
+          <input data-entry-field="company" data-id="${entry.id}" data-kind="internship" type="text" value="${escapeHtml(entry.company)}" placeholder="Muster AG">
+        </label>
+        <label>Ort
+          <input data-entry-field="location" data-id="${entry.id}" data-kind="internship" type="text" value="${escapeHtml(entry.location)}" placeholder="Berlin">
+        </label>
+        <label>Start
+          <input data-entry-field="start" data-id="${entry.id}" data-kind="internship" type="text" value="${escapeHtml(entry.start)}" placeholder="06/2023">
+        </label>
+        <label>Ende
+          <input data-entry-field="end" data-id="${entry.id}" data-kind="internship" type="text" value="${escapeHtml(entry.end)}" placeholder="09/2023">
+        </label>
+      </div>
+      <label>Beschreibung
+        <textarea data-entry-field="description" data-id="${entry.id}" data-kind="internship" rows="3" placeholder="Aufgaben, Technologien, Lernerfolge.">${escapeHtml(entry.description)}</textarea>
+      </label>
+    `;
+    return wrapper;
+  }
+
+  function createLanguageCard(entry, index) {
+    const wrapper = document.createElement("article");
+    wrapper.className = "entry-card";
+    wrapper.dataset.id = entry.id;
+    wrapper.dataset.type = "language";
+    wrapper.innerHTML = `
+      <div class="entry-head">
+        <strong>Sprache ${index + 1}</strong>
+        <button type="button" class="danger-btn" data-remove="language" data-id="${entry.id}">Entfernen</button>
+      </div>
+      <div class="field-grid">
+        <label>Sprache
+          <input data-entry-field="name" data-id="${entry.id}" data-kind="language" type="text" value="${escapeHtml(entry.name)}" placeholder="Deutsch">
+        </label>
+        <label>Niveau
+          <input data-entry-field="level" data-id="${entry.id}" data-kind="language" type="text" value="${escapeHtml(entry.level)}" placeholder="C2 / Muttersprache">
+        </label>
+      </div>
+    `;
+    return wrapper;
+  }
+
+  function createKnowledgeCard(entry, index) {
+    const wrapper = document.createElement("article");
+    wrapper.className = "entry-card";
+    wrapper.dataset.id = entry.id;
+    wrapper.dataset.type = "knowledge";
+    wrapper.innerHTML = `
+      <div class="entry-head">
+        <strong>Kenntnis ${index + 1}</strong>
+        <button type="button" class="danger-btn" data-remove="knowledge" data-id="${entry.id}">Entfernen</button>
+      </div>
+      <div class="field-grid">
+        <label>Kenntnis
+          <input data-entry-field="name" data-id="${entry.id}" data-kind="knowledge" type="text" value="${escapeHtml(entry.name)}" placeholder="MS Excel, SAP, CNC, Python">
+        </label>
+        <label>Level (1-5)
+          <input data-entry-field="level" data-id="${entry.id}" data-kind="knowledge" type="range" min="1" max="5" step="1" value="${escapeHtml(entry.level)}">
+        </label>
+      </div>
+    `;
+    return wrapper;
+  }
+
+  function createCertificationCard(entry, index) {
+    const wrapper = document.createElement("article");
+    wrapper.className = "entry-card";
+    wrapper.dataset.id = entry.id;
+    wrapper.dataset.type = "certification";
+    wrapper.innerHTML = `
+      <div class="entry-head">
+        <strong>Zertifizierung ${index + 1}</strong>
+        <button type="button" class="danger-btn" data-remove="certification" data-id="${entry.id}">Entfernen</button>
+      </div>
+      <div class="field-grid">
+        <label>Titel
+          <input data-entry-field="title" data-id="${entry.id}" data-kind="certification" type="text" value="${escapeHtml(entry.title)}" placeholder="AWS Certified Cloud Practitioner">
+        </label>
+        <label>Institution
+          <input data-entry-field="issuer" data-id="${entry.id}" data-kind="certification" type="text" value="${escapeHtml(entry.issuer)}" placeholder="Amazon">
+        </label>
+        <label>Datum/Jahr
+          <input data-entry-field="date" data-id="${entry.id}" data-kind="certification" type="text" value="${escapeHtml(entry.date)}" placeholder="2024">
+        </label>
+      </div>
+      <label>Details (optional)
+        <textarea data-entry-field="details" data-id="${entry.id}" data-kind="certification" rows="2" placeholder="z. B. Credential-ID">${escapeHtml(entry.details)}</textarea>
       </label>
     `;
     return wrapper;
@@ -708,7 +982,7 @@
             <option value="client"${selectedAttr(entry.type, "client")}>Kundenprojekt</option>
           </select>
         </label>
-        <label>Fuer wen war das Projekt? (optional)
+        <label>Für wen war das Projekt? (optional)
           <input data-entry-field="client" data-id="${entry.id}" data-kind="project" type="text" value="${escapeHtml(entry.client)}" placeholder="Firma / Kunde">
         </label>
         <label>Deine Rolle (optional)
@@ -717,7 +991,7 @@
         <label>Status (optional)
           <input data-entry-field="status" data-id="${entry.id}" data-kind="project" type="text" value="${escapeHtml(entry.status)}" placeholder="Live, abgeschlossen, in Arbeit">
         </label>
-        <label>Teamgroesse (optional)
+        <label>Teamgröße (optional)
           <input data-entry-field="teamSize" data-id="${entry.id}" data-kind="project" type="text" value="${escapeHtml(entry.teamSize)}" placeholder="z. B. 4 Personen">
         </label>
         <label>Start (optional)
@@ -781,11 +1055,11 @@
     wrapper.dataset.type = "customField";
     wrapper.innerHTML = `
       <div class="entry-head">
-        <strong>Eigenes Feld ${index + 1}</strong>
+        <strong>Kategorie ${index + 1}</strong>
         <button type="button" class="danger-btn" data-remove="customField" data-id="${entry.id}">Entfernen</button>
       </div>
       <div class="field-grid">
-        <label>Feldname
+        <label>Kategorie-Name
           <input data-entry-field="label" data-id="${entry.id}" data-kind="customField" type="text" value="${escapeHtml(entry.label)}" placeholder="Zertifizierungen">
         </label>
         <label>Position im Lebenslauf
@@ -813,15 +1087,31 @@
 
   function renderFormLists() {
     experienceList.innerHTML = "";
+    internshipList.innerHTML = "";
     educationList.innerHTML = "";
+    languageList.innerHTML = "";
+    knowledgeList.innerHTML = "";
+    certificationList.innerHTML = "";
     projectList.innerHTML = "";
     customFieldList.innerHTML = "";
 
     state.experiences.forEach(function (entry, index) {
       experienceList.appendChild(createExperienceCard(entry, index));
     });
+    state.internships.forEach(function (entry, index) {
+      internshipList.appendChild(createInternshipCard(entry, index));
+    });
     state.education.forEach(function (entry, index) {
       educationList.appendChild(createEducationCard(entry, index));
+    });
+    state.languages.forEach(function (entry, index) {
+      languageList.appendChild(createLanguageCard(entry, index));
+    });
+    state.knowledgeItems.forEach(function (entry, index) {
+      knowledgeList.appendChild(createKnowledgeCard(entry, index));
+    });
+    state.certifications.forEach(function (entry, index) {
+      certificationList.appendChild(createCertificationCard(entry, index));
     });
     state.projects.forEach(function (entry, index) {
       projectList.appendChild(createProjectCard(entry, index));
@@ -885,7 +1175,7 @@
   function renderCustomFieldList(items) {
     return items
       .map(function (field) {
-        const title = String(field.label || "").trim() || "Eigenes Feld";
+        const title = String(field.label || "").trim() || "Kategorie";
         return `
           <article class="cv-custom-item">
             <h4>${escapeHtml(title)}</h4>
@@ -905,6 +1195,8 @@
 
   function renderPreview() {
     ensureElementLayouts();
+    ensureVisibilitySettings();
+    const visible = state.custom.visibleSections;
     const shape = sanitizeOption(state.custom.photoShape, ["circle", "rounded", "square"], "circle");
     const frame = sanitizeOption(state.custom.photoFrame, ["clean", "double", "shadow", "polaroid", "none"], "clean");
     const photoScale = safeNumber(state.custom.photoZoom, 100, 80, 180) / 100;
@@ -922,12 +1214,26 @@
       return field.placement === "content" && String(field.value || "").trim();
     });
 
-    const metaItems = [
-      { value: state.basics.email, className: "" },
-      { value: state.basics.phone, className: "cv-meta-phone" },
-      { value: state.basics.location, className: "" },
-      { value: state.basics.website, className: "" }
-    ]
+    const contactSources = [];
+    if (visible.showEmail) {
+      contactSources.push({ value: state.basics.email, className: "" });
+    }
+    if (visible.showPhone) {
+      contactSources.push({ value: state.basics.phone, className: "cv-meta-phone" });
+    }
+    if (visible.showLocation) {
+      contactSources.push({ value: state.basics.location, className: "" });
+    }
+    if (visible.showAddress) {
+      contactSources.push({ value: state.basics.address, className: "" });
+    }
+    if (visible.showBirthDate) {
+      contactSources.push({ value: state.basics.birthDate, className: "cv-meta-phone" });
+    }
+    if (visible.showWebsite) {
+      contactSources.push({ value: state.basics.website, className: "" });
+    }
+    const metaItems = contactSources
       .map(function (item) {
         return {
           value: String(item.value || "").trim(),
@@ -956,7 +1262,7 @@
 
     const summaryMarkup = String(state.basics.summary || "").trim()
       ? `<p class="cv-summary">${escapeHtml(state.basics.summary)}</p>`
-      : '<p class="muted-empty">Fuege einen kurzen Profiltext hinzu.</p>';
+      : '<p class="muted-empty">Füge einen kurzen Profiltext hinzu.</p>';
 
     const skillTags = parseCommaList(state.basics.skills)
       .map(function (skill) {
@@ -964,7 +1270,7 @@
       })
       .join("");
 
-    const photoMarkup = photoSource
+    const photoMarkup = visible.showPhoto && photoSource
       ? wrapLayoutElement(
           "headerPhoto",
           `
@@ -989,7 +1295,7 @@
           </article>
         `;
       },
-      "Noch keine Eintraege vorhanden."
+      "Noch keine Einträge vorhanden."
     );
 
     const eduMarkup = renderEntryList(
@@ -1005,7 +1311,7 @@
           </article>
         `;
       },
-      "Noch keine Eintraege vorhanden."
+      "Noch keine Einträge vorhanden."
     );
 
     const projectMarkup = renderEntryList(
@@ -1019,7 +1325,7 @@
           subParts.push(String(entry.role || "").trim());
         }
         if (String(entry.client || "").trim()) {
-          subParts.push("Fuer: " + String(entry.client || "").trim());
+          subParts.push("Für: " + String(entry.client || "").trim());
         }
         subParts.push(typeLabel);
         if (String(entry.teamSize || "").trim()) {
@@ -1085,18 +1391,87 @@
       "Noch keine Projekte vorhanden."
     );
 
+    const internshipMarkup = renderEntryList(
+      state.internships,
+      function (entry) {
+        const period = formatPeriod(entry.start, entry.end);
+        const subParts = [String(entry.company || "").trim(), String(entry.location || "").trim()].filter(Boolean);
+        return `
+          <article class="cv-entry">
+            <h4 class="cv-entry-title">${escapeHtml(String(entry.role || "").trim() || "Praktikum")}</h4>
+            <p class="cv-entry-sub">${escapeHtml(subParts.join(" | ") || "Unternehmen")}</p>
+            ${period ? `<p class="cv-entry-time">${period}</p>` : ""}
+            ${String(entry.description || "").trim() ? `<p class="cv-entry-desc">${escapeHtml(entry.description)}</p>` : ""}
+          </article>
+        `;
+      },
+      "Noch keine Praktika vorhanden."
+    );
+
+    const languageMarkup = renderEntryList(
+      state.languages,
+      function (entry) {
+        const label = String(entry.name || "").trim() || "Sprache";
+        const level = String(entry.level || "").trim();
+        return `
+          <article class="cv-entry cv-language-entry">
+            <h4 class="cv-entry-title">${escapeHtml(label)}</h4>
+            ${level ? `<p class="cv-entry-sub">${escapeHtml(level)}</p>` : ""}
+          </article>
+        `;
+      },
+      "Noch keine Sprachen vorhanden."
+    );
+
+    const knowledgeMarkup = renderEntryList(
+      state.knowledgeItems,
+      function (entry) {
+        const label = String(entry.name || "").trim() || "Kenntnis";
+        const level = Math.round(safeNumber(entry.level, 3, 1, 5));
+        return `
+          <article class="knowledge-row">
+            <p class="knowledge-label">${escapeHtml(label)}</p>
+            <div class="knowledge-bar" aria-label="${escapeHtml(label)} Level ${level} von 5">
+              <span style="width:${level * 20}%"></span>
+            </div>
+          </article>
+        `;
+      },
+      "Noch keine Kenntnisse vorhanden."
+    );
+
+    const certificationMarkup = renderEntryList(
+      state.certifications,
+      function (entry) {
+        const title = String(entry.title || "").trim() || "Zertifizierung";
+        const issuer = String(entry.issuer || "").trim();
+        const date = String(entry.date || "").trim();
+        const details = String(entry.details || "").trim();
+        const subParts = [issuer, date].filter(Boolean).join(" | ");
+        return `
+          <article class="cv-entry">
+            <h4 class="cv-entry-title">${escapeHtml(title)}</h4>
+            ${subParts ? `<p class="cv-entry-sub">${escapeHtml(subParts)}</p>` : ""}
+            ${details ? `<p class="cv-entry-desc">${escapeHtml(details)}</p>` : ""}
+          </article>
+        `;
+      },
+      "Noch keine Zertifizierungen vorhanden."
+    );
+
+    const interestsMarkup = parseCommaList(state.basics.interests)
+      .map(function (item) {
+        return `<span class="skill-tag">${escapeHtml(item)}</span>`;
+      })
+      .join("");
+
     const headerClass = "header-align-" + state.custom.headerAlign;
-    const layoutClass = state.custom.layoutMode === "top" ? "layout-top" : "layout-sidebar";
+    let layoutClass = state.custom.layoutMode === "top" ? "layout-top" : "layout-sidebar";
     const templateClass = "template-" + state.custom.templateMode;
     const fontClass = "font-" + state.custom.fontMode;
     const sectionClass = "section-" + state.custom.sectionStyle;
     const densityClass = "density-" + state.custom.density;
 
-    previewPaper.className =
-      "cv-paper " +
-      [layoutClass, templateClass, fontClass, sectionClass, densityClass, state.custom.elementDragEnabled ? "layout-edit-mode" : ""]
-        .filter(Boolean)
-        .join(" ");
     previewPaper.style.setProperty("--cv-primary", state.custom.primaryColor);
     previewPaper.style.setProperty("--cv-bg", state.custom.backgroundColor);
     previewPaper.style.setProperty("--cv-text", state.custom.textColor);
@@ -1115,32 +1490,48 @@
     previewPaper.style.setProperty("--cv-primary-9w", rgbToCss(mixWithWhite(primaryRgb, 0.09)));
     previewPaper.style.setProperty("--cv-primary-a35", rgbToCss(primaryRgb, 0.35));
 
-    const skillsSection = wrapLayoutElement(
-      "skills",
-      `
+    const skillsSection = visible.showSkills
+      ? wrapLayoutElement(
+          "skills",
+          `
       <section class="cv-section">
         <h3>Skills</h3>
         ${skillTags ? `<div class="skill-list">${skillTags}</div>` : '<p class="muted-empty">Keine Skills eingetragen.</p>'}
       </section>
     `
-    );
+        )
+      : "";
 
-    const educationSection = wrapLayoutElement(
-      "education",
-      `
+    const languageSection = visible.showLanguages
+      ? wrapLayoutElement(
+          "languages",
+          `
       <section class="cv-section">
-        <h3>Ausbildung</h3>
-        ${eduMarkup}
+        <h3>Sprachen</h3>
+        ${languageMarkup}
       </section>
     `
-    );
+        )
+      : "";
 
-    const sidebarCustomSection = sidebarCustomFields.length
+    const knowledgeSection = visible.showKnowledge
+      ? wrapLayoutElement(
+          "knowledge",
+          `
+      <section class="cv-section">
+        <h3>Kenntnisse</h3>
+        <div class="knowledge-list">${knowledgeMarkup}</div>
+      </section>
+    `
+        )
+      : "";
+
+    const sidebarCustomSection = visible.showCustomSidebar && sidebarCustomFields.length
       ? wrapLayoutElement(
           "customSidebar",
           `
         <section class="cv-section">
-          <h3>Weitere Infos</h3>
+          <h3>Kategorien</h3>
           <div class="cv-custom-list">
             ${renderCustomFieldList(sidebarCustomFields)}
           </div>
@@ -1149,12 +1540,12 @@
         )
       : "";
 
-    const contentCustomSection = contentCustomFields.length
+    const contentCustomSection = visible.showCustomContent && contentCustomFields.length
       ? wrapLayoutElement(
           "customContent",
           `
         <section class="cv-section">
-          <h3>Eigene Felder</h3>
+          <h3>Kategorien</h3>
           <div class="cv-custom-list">
             ${renderCustomFieldList(contentCustomFields)}
           </div>
@@ -1163,58 +1554,198 @@
         )
       : "";
 
+    const interestsSection = visible.showInterests
+      ? wrapLayoutElement(
+          "interests",
+          `
+      <section class="cv-section">
+        <h3>Interessen</h3>
+        ${interestsMarkup ? `<div class="skill-list">${interestsMarkup}</div>` : '<p class="muted-empty">Keine Interessen eingetragen.</p>'}
+      </section>
+    `
+        )
+      : "";
+
     const sidebarMarkup = `
       <aside class="cv-sidebar">
         ${skillsSection}
-        ${educationSection}
+        ${languageSection}
+        ${knowledgeSection}
+        ${interestsSection}
         ${sidebarCustomSection}
       </aside>
     `;
 
-    const profileSection = wrapLayoutElement(
-      "profile",
-      `
+    const profileSection = visible.showProfile
+      ? wrapLayoutElement(
+          "profile",
+          `
       <section class="cv-section">
         <h3>Profil</h3>
         ${summaryMarkup}
       </section>
     `
-    );
-    const experienceSection = wrapLayoutElement(
-      "experience",
-      `
+        )
+      : "";
+    const experienceSection = visible.showExperience
+      ? wrapLayoutElement(
+          "experience",
+          `
       <section class="cv-section">
         <h3>Berufserfahrung</h3>
         ${expMarkup}
       </section>
     `
-    );
-    const projectSection = wrapLayoutElement(
-      "projects",
-      `
+        )
+      : "";
+    const internshipSection = visible.showInternships
+      ? wrapLayoutElement(
+          "internships",
+          `
+      <section class="cv-section">
+        <h3>Praktika</h3>
+        ${internshipMarkup}
+      </section>
+    `
+        )
+      : "";
+    const educationMainSection = visible.showEducation
+      ? wrapLayoutElement(
+          "education",
+          `
+      <section class="cv-section">
+        <h3>Ausbildung</h3>
+        ${eduMarkup}
+      </section>
+    `
+        )
+      : "";
+    const certificationMainSection = visible.showCertifications
+      ? wrapLayoutElement(
+          "certifications",
+          `
+      <section class="cv-section">
+        <h3>Zertifizierungen</h3>
+        ${certificationMarkup}
+      </section>
+    `
+        )
+      : "";
+    const projectSection = visible.showProjects
+      ? wrapLayoutElement(
+          "projects",
+          `
       <section class="cv-section">
         <h3>Projekte</h3>
         ${projectMarkup}
       </section>
     `
-    );
+        )
+      : "";
+    const volunteerSection = visible.showVolunteer
+      ? wrapLayoutElement(
+          "volunteer",
+          `
+      <section class="cv-section">
+        <h3>Ehrenamt</h3>
+        ${String(state.basics.volunteer || "").trim() ? `<p class="cv-summary">${escapeHtml(state.basics.volunteer)}</p>` : '<p class="muted-empty">Kein Ehrenamt eingetragen.</p>'}
+      </section>
+    `
+        )
+      : "";
+    const referencesSection = visible.showReferences
+      ? wrapLayoutElement(
+          "references",
+          `
+      <section class="cv-section">
+        <h3>Referenzen</h3>
+        ${String(state.basics.references || "").trim() ? `<p class="cv-summary">${escapeHtml(state.basics.references)}</p>` : '<p class="muted-empty">Keine Referenzen eingetragen.</p>'}
+      </section>
+    `
+        )
+      : "";
 
     const contentMarkup = `
       <section class="cv-content">
         ${profileSection}
         ${experienceSection}
+        ${internshipSection}
+        ${educationMainSection}
+        ${certificationMainSection}
         ${projectSection}
+        ${volunteerSection}
+        ${referencesSection}
         ${contentCustomSection}
       </section>
     `;
 
-    const headerTextMarkup = `
+    const headerNameMarkup = visible.showName
+      ? wrapLayoutElement("name", `<h2 class="cv-name">${escapeHtml(state.basics.fullName || "Dein Name")}</h2>`)
+      : "";
+    const headerHeadlineMarkup = visible.showHeadline
+      ? wrapLayoutElement("headline", `<p class="cv-headline">${escapeHtml(state.basics.headline || "Berufsbezeichnung")}</p>`)
+      : "";
+    const headerContactMarkup = meta ? wrapLayoutElement("contact", `<div class="cv-meta">${meta}</div>`) : "";
+
+    const headerTextMarkup = headerNameMarkup || headerHeadlineMarkup || headerContactMarkup
+      ? `
       <div>
-        ${wrapLayoutElement("name", `<h2 class="cv-name">${escapeHtml(state.basics.fullName || "Dein Name")}</h2>`)}
-        ${wrapLayoutElement("headline", `<p class="cv-headline">${escapeHtml(state.basics.headline || "Berufsbezeichnung")}</p>`)}
-        ${meta ? wrapLayoutElement("contact", `<div class="cv-meta">${meta}</div>`) : ""}
+        ${headerNameMarkup}
+        ${headerHeadlineMarkup}
+        ${headerContactMarkup}
       </div>
-    `;
+    `
+      : "";
+
+    const hasSidebarContent = Boolean(
+      skillsSection || languageSection || knowledgeSection || interestsSection || sidebarCustomSection
+    );
+    const hasMainContent = Boolean(
+      profileSection ||
+        experienceSection ||
+        internshipSection ||
+        educationMainSection ||
+        certificationMainSection ||
+        projectSection ||
+        volunteerSection ||
+        referencesSection ||
+        contentCustomSection
+    );
+    if (!hasSidebarContent || !hasMainContent) {
+      layoutClass = "layout-top";
+    }
+    const finalSidebarMarkup = hasSidebarContent ? sidebarMarkup : "";
+    const finalContentMarkup = hasMainContent ? contentMarkup : "";
+    const renderAsTopLayout = layoutClass === "layout-top";
+
+    const activeSectionCount = [
+      skillsSection,
+      languageSection,
+      knowledgeSection,
+      interestsSection,
+      sidebarCustomSection,
+      profileSection,
+      experienceSection,
+      internshipSection,
+      educationMainSection,
+      certificationMainSection,
+      projectSection,
+      volunteerSection,
+      referencesSection,
+      contentCustomSection
+    ].filter(Boolean).length;
+    let autoSpacingClass = "";
+    if (activeSectionCount >= 6 && activeSectionCount <= 9) {
+      autoSpacingClass = "auto-spacing-subtle";
+    } else if (activeSectionCount >= 3 && activeSectionCount <= 5) {
+      autoSpacingClass = "auto-spacing-soft";
+    }
+
+    previewPaper.className =
+      "cv-paper " +
+      [layoutClass, templateClass, fontClass, sectionClass, densityClass, autoSpacingClass, state.custom.elementDragEnabled ? "layout-edit-mode" : ""]
+        .filter(Boolean)
+        .join(" ");
 
     previewPaper.innerHTML = `
       <div class="cv-wrapper">
@@ -1232,7 +1763,7 @@
           }
         </header>
         <div class="cv-main">
-          ${state.custom.layoutMode === "top" ? contentMarkup + sidebarMarkup : sidebarMarkup + contentMarkup}
+          ${renderAsTopLayout ? finalContentMarkup + finalSidebarMarkup : finalSidebarMarkup + finalContentMarkup}
         </div>
       </div>
     `;
@@ -1246,10 +1777,15 @@
     state.basics.email = String(formData.get("email") || "");
     state.basics.phone = String(formData.get("phone") || "");
     state.basics.location = String(formData.get("location") || "");
+    state.basics.address = String(formData.get("address") || "");
+    state.basics.birthDate = String(formData.get("birthDate") || "");
     state.basics.website = String(formData.get("website") || "");
     state.basics.photoUrl = String(formData.get("photoUrl") || "");
     state.basics.summary = String(formData.get("summary") || "");
     state.basics.skills = String(formData.get("skills") || "");
+    state.basics.interests = String(formData.get("interests") || "");
+    state.basics.volunteer = String(formData.get("volunteer") || "");
+    state.basics.references = String(formData.get("references") || "");
 
     state.custom.layoutMode = String(formData.get("layoutMode") || "sidebar");
     state.custom.templateMode = String(formData.get("templateMode") || "modern");
@@ -1267,6 +1803,11 @@
     state.custom.density = String(formData.get("density") || "1");
     state.custom.layoutElement = sanitizeOption(String(formData.get("layoutElement") || state.custom.layoutElement || "profile"), layoutElementIds, "profile");
     state.custom.elementDragEnabled = formData.get("elementDragEnabled") === "on";
+    ensureVisibilitySettings();
+    visibilityKeys.forEach(function (key) {
+      const inputName = "vis" + key.charAt(0).toUpperCase() + key.slice(1);
+      state.custom.visibleSections[key] = formData.get(inputName) === "on";
+    });
 
     const selectedLayout = getElementLayout(state.custom.layoutElement);
     selectedLayout.x = Math.round(safeNumber(formData.get("elementOffsetX"), selectedLayout.x, -220, 220));
@@ -1284,10 +1825,15 @@
     form.elements.email.value = state.basics.email;
     form.elements.phone.value = state.basics.phone;
     form.elements.location.value = state.basics.location;
+    form.elements.address.value = state.basics.address;
+    form.elements.birthDate.value = state.basics.birthDate;
     form.elements.website.value = state.basics.website;
     form.elements.photoUrl.value = state.basics.photoUrl;
     form.elements.summary.value = state.basics.summary;
     form.elements.skills.value = state.basics.skills;
+    form.elements.interests.value = state.basics.interests;
+    form.elements.volunteer.value = state.basics.volunteer;
+    form.elements.references.value = state.basics.references;
 
     form.elements.layoutMode.value = state.custom.layoutMode;
     form.elements.templateMode.value = state.custom.templateMode;
@@ -1305,6 +1851,13 @@
     form.elements.density.value = state.custom.density;
     form.elements.layoutElement.value = selectedLayoutElementId();
     form.elements.elementDragEnabled.checked = Boolean(state.custom.elementDragEnabled);
+    ensureVisibilitySettings();
+    visibilityKeys.forEach(function (key) {
+      const inputName = "vis" + key.charAt(0).toUpperCase() + key.slice(1);
+      if (form.elements[inputName]) {
+        form.elements[inputName].checked = Boolean(state.custom.visibleSections[key]);
+      }
+    });
 
     photoFileInput.value = "";
     updateElementControlsFromState();
@@ -1316,13 +1869,18 @@
       headline: "Product Designerin und Frontend Entwicklerin",
       email: "maya.schneider@mail.de",
       phone: "+49 176 45897631",
-      location: "Muenchen, Deutschland",
+      location: "München, Deutschland",
+      address: "Prinzregentenstraße 18, 80538 München",
+      birthDate: "14.06.1994",
       website: "portfolio-maya.de",
       photoUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=500&q=80",
       photoDataUrl: "",
       summary:
-        "Kreative Produktdesignerin mit 6+ Jahren Erfahrung in der Entwicklung digitaler Produkte. Fokus auf nutzerzentrierte Oberflaechen, klare Informationsarchitektur und saubere Zusammenarbeit mit Engineering-Teams.",
-      skills: "Figma, UX Research, HTML/CSS, JavaScript, TypeScript, React, Kommunikation"
+        "Kreative Produktdesignerin mit 6+ Jahren Erfahrung in der Entwicklung digitaler Produkte. Fokus auf nutzerzentrierte Oberflächen, klare Informationsarchitektur und saubere Zusammenarbeit mit Engineering-Teams.",
+      skills: "Figma, UX Research, HTML/CSS, JavaScript, TypeScript, React, Kommunikation",
+      interests: "Reisen, Fotografie, Trailrunning",
+      volunteer: "Mentorin bei Women in Tech Meetups (seit 2023)",
+      references: "Auf Anfrage verfügbar"
     };
 
     state.experiences = [
@@ -1330,11 +1888,11 @@
         id: uid("exp"),
         role: "Senior Product Designerin",
         company: "NordTech AG",
-        location: "Muenchen",
+        location: "München",
         start: "03/2022",
         end: "Heute",
         description:
-          "Leitung von Designprojekten fuer B2B-Plattformen. Aufbau eines komponentenbasierten Design-Systems und enge Abstimmung mit Frontend-Teams."
+          "Leitung von Designprojekten für B2B-Plattformen. Aufbau eines komponentenbasierten Design-Systems und enge Abstimmung mit Frontend-Teams."
       },
       {
         id: uid("exp"),
@@ -1344,7 +1902,7 @@
         start: "07/2019",
         end: "02/2022",
         description:
-          "Konzeption, Prototyping und Testing fuer Web- und Mobile-Produkte. Verbesserung der Conversion im Onboarding um 18%."
+          "Konzeption, Prototyping und Testing für Web- und Mobile-Produkte. Verbesserung der Conversion im Onboarding um 18%."
       }
     ];
 
@@ -1360,10 +1918,51 @@
       {
         id: uid("edu"),
         degree: "B.A. Kommunikationsdesign",
-        school: "FH Muenchen",
+        school: "FH München",
         start: "10/2013",
         end: "09/2017",
         description: "Vertiefung in visuelle Systeme, Typografie und Interface-Konzeption."
+      }
+    ];
+
+    state.internships = [
+      {
+        id: uid("intern"),
+        role: "UX Praktikantin",
+        company: "DesignLab Studio",
+        location: "München",
+        start: "04/2018",
+        end: "09/2018",
+        description: "Mitarbeit an User-Interviews, Wireframes und klickbaren Prototypen."
+      }
+    ];
+
+    state.languages = [
+      { id: uid("lang"), name: "Deutsch", level: "Muttersprache" },
+      { id: uid("lang"), name: "Englisch", level: "C1" },
+      { id: uid("lang"), name: "Französisch", level: "B1" }
+    ];
+
+    state.knowledgeItems = [
+      { id: uid("know"), name: "MS Office", level: "4" },
+      { id: uid("know"), name: "Figma", level: "5" },
+      { id: uid("know"), name: "Jira/Confluence", level: "4" }
+    ];
+
+    state.certifications = [
+      {
+        id: uid("cert"),
+        title: "Google UX Certificate",
+        issuer: "Google",
+        date: "2023",
+        details: ""
+      },
+      {
+        id: uid("cert"),
+        title: "Scrum Foundation",
+        issuer: "Scrum.org",
+        date: "2022",
+        details: ""
       }
     ];
 
@@ -1457,7 +2056,8 @@
       density: "1",
       layoutElement: "profile",
       elementDragEnabled: false,
-      elementLayouts: createDefaultElementLayouts()
+      elementLayouts: createDefaultElementLayouts(),
+      visibleSections: createDefaultVisibilitySettings()
     };
 
     setFormValuesFromState();
@@ -1471,8 +2071,32 @@
     renderPreview();
   }
 
+  function addInternship() {
+    state.internships.push(defaultInternship());
+    renderFormLists();
+    renderPreview();
+  }
+
   function addEducation() {
     state.education.push(defaultEducation());
+    renderFormLists();
+    renderPreview();
+  }
+
+  function addLanguage() {
+    state.languages.push(defaultLanguage());
+    renderFormLists();
+    renderPreview();
+  }
+
+  function addKnowledge() {
+    state.knowledgeItems.push(defaultKnowledgeItem());
+    renderFormLists();
+    renderPreview();
+  }
+
+  function addCertification() {
+    state.certifications.push(defaultCertification());
     renderFormLists();
     renderPreview();
   }
@@ -1494,8 +2118,24 @@
       state.experiences = state.experiences.filter(function (item) {
         return item.id !== id;
       });
+    } else if (kind === "internship") {
+      state.internships = state.internships.filter(function (item) {
+        return item.id !== id;
+      });
     } else if (kind === "education") {
       state.education = state.education.filter(function (item) {
+        return item.id !== id;
+      });
+    } else if (kind === "language") {
+      state.languages = state.languages.filter(function (item) {
+        return item.id !== id;
+      });
+    } else if (kind === "knowledge") {
+      state.knowledgeItems = state.knowledgeItems.filter(function (item) {
+        return item.id !== id;
+      });
+    } else if (kind === "certification") {
+      state.certifications = state.certifications.filter(function (item) {
         return item.id !== id;
       });
     } else if (kind === "project") {
@@ -1515,8 +2155,20 @@
     if (kind === "experience") {
       return state.experiences;
     }
+    if (kind === "internship") {
+      return state.internships;
+    }
     if (kind === "education") {
       return state.education;
+    }
+    if (kind === "language") {
+      return state.languages;
+    }
+    if (kind === "knowledge") {
+      return state.knowledgeItems;
+    }
+    if (kind === "certification") {
+      return state.certifications;
     }
     if (kind === "project") {
       return state.projects;
@@ -1564,7 +2216,7 @@
       return;
     }
     if (!file.type.startsWith("image/")) {
-      window.alert("Bitte waehle eine Bilddatei aus.");
+      window.alert("Bitte wähle eine Bilddatei aus.");
       fileInput.value = "";
       return;
     }
@@ -1583,7 +2235,7 @@
       return;
     }
     if (!file.type.startsWith("image/")) {
-      window.alert("Bitte waehle eine Bilddatei aus.");
+      window.alert("Bitte wähle eine Bilddatei aus.");
       fileInput.value = "";
       return;
     }
@@ -1650,6 +2302,8 @@
     const exportPaper = previewPaper.cloneNode(true);
     exportPaper.classList.remove("layout-edit-mode");
     exportPaper.classList.add("pdf-export-mode");
+    exportPaper.style.width = "210mm";
+    exportPaper.style.minHeight = "297mm";
     exportPaper.removeAttribute("data-active-layout-element");
     exportPaper.querySelectorAll(".is-active-layout-element").forEach(function (element) {
       element.classList.remove("is-active-layout-element");
@@ -1677,11 +2331,15 @@
           margin: 0,
           filename: fileName,
           image: { type: "jpeg", quality: 0.98 },
+          pagebreak: {
+            mode: ["css", "legacy"],
+            avoid: [".cv-layout-element", ".cv-entry", ".cv-section", ".cv-custom-item", ".knowledge-row", "img"]
+          },
           html2canvas: {
             scale: 2,
             useCORS: true,
             backgroundColor: "#ffffff",
-            windowWidth: Math.max(previewPaper.scrollWidth, 794),
+            windowWidth: 794,
             scrollX: 0,
             scrollY: 0
           },
@@ -1863,7 +2521,11 @@
   });
 
   document.getElementById("addExperienceBtn")?.addEventListener("click", addExperience);
+  document.getElementById("addInternshipBtn")?.addEventListener("click", addInternship);
   document.getElementById("addEducationBtn")?.addEventListener("click", addEducation);
+  document.getElementById("addLanguageBtn")?.addEventListener("click", addLanguage);
+  document.getElementById("addKnowledgeBtn")?.addEventListener("click", addKnowledge);
+  document.getElementById("addCertificationBtn")?.addEventListener("click", addCertification);
   document.getElementById("addProjectBtn")?.addEventListener("click", addProject);
   document.getElementById("addCustomFieldBtn")?.addEventListener("click", addCustomField);
   resetDemoBtn.addEventListener("click", setDemoData);
@@ -1887,7 +2549,7 @@
     } catch (error) {
       console.error(error);
       window.alert(
-        "Beim PDF-Export ist ein Fehler aufgetreten. Falls externe Bilder genutzt werden, pruefe CORS oder nutze Upload-Bilder."
+        "Beim PDF-Export ist ein Fehler aufgetreten. Falls externe Bilder genutzt werden, prüfe CORS oder nutze Upload-Bilder."
       );
     } finally {
       downloadPdfBtn.disabled = false;
@@ -1896,12 +2558,17 @@
   });
 
   state.experiences = [defaultExperience()];
+  state.internships = [defaultInternship()];
   state.education = [defaultEducation()];
+  state.languages = [defaultLanguage()];
+  state.knowledgeItems = [defaultKnowledgeItem()];
+  state.certifications = [defaultCertification()];
   state.projects = [defaultProject()];
   state.customFields = [defaultCustomField()];
   state.custom.elementLayouts = createDefaultElementLayouts();
   state.custom.layoutElement = "profile";
   state.custom.elementDragEnabled = false;
+  state.custom.visibleSections = createDefaultVisibilitySettings();
   renderFormLists();
   setFormValuesFromState();
   renderPreview();

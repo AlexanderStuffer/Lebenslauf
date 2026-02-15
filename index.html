@@ -27,9 +27,9 @@
     <section class="panel editor" aria-label="Bearbeitungsbereich">
       <form id="cvForm" autocomplete="on">
         <div class="form-card">
-          <h2>Persoenliche Daten</h2>
+          <h2>Persönliche Daten</h2>
           <div class="field-grid">
-            <label>Vollstaendiger Name
+            <label>Vollständiger Name
               <input id="fullName" name="fullName" type="text" placeholder="Max Mustermann">
             </label>
             <label>Berufsbezeichnung
@@ -44,13 +44,19 @@
             <label>Ort
               <input id="location" name="location" type="text" placeholder="Berlin, Deutschland">
             </label>
+            <label>Adresse (optional)
+              <input id="address" name="address" type="text" placeholder="Musterstraße 12, 12345 Berlin">
+            </label>
+            <label>Geburtsdatum (optional)
+              <input id="birthDate" name="birthDate" type="text" placeholder="14.06.2000">
+            </label>
             <label>Website / LinkedIn
               <input id="website" name="website" type="text" placeholder="linkedin.com/in/max">
             </label>
             <label>Foto-URL (optional)
               <input id="photoUrl" name="photoUrl" type="url" placeholder="https://...">
             </label>
-            <label>Profilbild Datei (optional)
+            <label>Profilbild-Datei (optional)
               <input id="photoFile" name="photoFile" type="file" accept="image/*">
             </label>
           </div>
@@ -59,7 +65,7 @@
             <span class="field-help">Wenn ein Bild hochgeladen wurde, wird es statt der URL verwendet.</span>
           </div>
             <label>Profiltext
-            <textarea id="summary" name="summary" rows="4" placeholder="Kurze Zusammenfassung ueber dich, deine Schwerpunkte und Ziele."></textarea>
+            <textarea id="summary" name="summary" rows="4" placeholder="Kurze Zusammenfassung über dich, deine Schwerpunkte und Ziele."></textarea>
           </label>
           <label>Skills (kommagetrennt)
             <input id="skills" name="skills" type="text" placeholder="JavaScript, React, TypeScript, Kommunikation">
@@ -81,10 +87,10 @@
             <label>Profilbild Zoom
               <input id="photoZoom" name="photoZoom" type="range" min="80" max="180" step="5" value="100">
             </label>
-            <label>Profilbild Position X
+            <label>Profilbild-Position X
               <input id="photoX" name="photoX" type="range" min="0" max="100" step="1" value="50">
             </label>
-            <label>Profilbild Position Y
+            <label>Profilbild-Position Y
               <input id="photoY" name="photoY" type="range" min="0" max="100" step="1" value="50">
             </label>
           </div>
@@ -100,10 +106,42 @@
 
         <div class="form-card">
           <div class="section-title-row">
+          <h2>Praktika</h2>
+            <button id="addInternshipBtn" type="button" class="secondary-btn">+ Praktikum</button>
+          </div>
+          <div id="internshipList" class="entry-list"></div>
+        </div>
+
+        <div class="form-card">
+          <div class="section-title-row">
           <h2>Ausbildung</h2>
             <button id="addEducationBtn" type="button" class="secondary-btn">+ Eintrag</button>
           </div>
           <div id="educationList" class="entry-list"></div>
+        </div>
+
+        <div class="form-card">
+          <div class="section-title-row">
+            <h2>Sprachen</h2>
+            <button id="addLanguageBtn" type="button" class="secondary-btn">+ Sprache</button>
+          </div>
+          <div id="languageList" class="entry-list"></div>
+        </div>
+
+        <div class="form-card">
+          <div class="section-title-row">
+            <h2>Kenntnisse (mit Skala)</h2>
+            <button id="addKnowledgeBtn" type="button" class="secondary-btn">+ Kenntnis</button>
+          </div>
+          <div id="knowledgeList" class="entry-list"></div>
+        </div>
+
+        <div class="form-card">
+          <div class="section-title-row">
+            <h2>Zertifizierungen</h2>
+            <button id="addCertificationBtn" type="button" class="secondary-btn">+ Zertifizierung</button>
+          </div>
+          <div id="certificationList" class="entry-list"></div>
         </div>
 
         <div class="form-card">
@@ -116,11 +154,56 @@
 
         <div class="form-card">
           <div class="section-title-row">
-            <h2>Benutzerdefinierte Felder</h2>
-            <button id="addCustomFieldBtn" type="button" class="secondary-btn">+ Feld</button>
+            <h2>Kategorien (optional)</h2>
+            <button id="addCustomFieldBtn" type="button" class="secondary-btn">+ Kategorie</button>
           </div>
-          <p class="field-help">Hier kannst du eigene Felder anlegen und selbst bestimmen, wo sie angezeigt werden.</p>
+          <p class="field-help">Lege eigene Kategorien an und füge Inhalte als Text, Liste oder Tags hinzu.</p>
           <div id="customFieldList" class="entry-list"></div>
+        </div>
+
+        <div class="form-card">
+          <h2>Weitere Bereiche</h2>
+          <div class="field-grid">
+            <label>Interessen / Hobbys (optional, kommagetrennt)
+              <input id="interests" name="interests" type="text" placeholder="Lesen, Reisen, Sport">
+            </label>
+            <label>Ehrenamt / Engagement (optional)
+              <textarea id="volunteer" name="volunteer" rows="3" placeholder="z. B. Mentor im Coding-Club"></textarea>
+            </label>
+            <label>Referenzen (optional)
+              <textarea id="references" name="references" rows="3" placeholder="z. B. Auf Anfrage verfügbar"></textarea>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h2>Elemente aktivieren / deaktivieren</h2>
+          <p class="field-help">Aktivierte Elemente werden automatisch ohne unnötige Lücken platziert. Du kannst sie danach weiterhin frei verschieben.</p>
+          <div class="visibility-grid">
+            <label class="toggle-row"><input type="checkbox" id="visShowPhoto" name="visShowPhoto" checked> Bild</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowName" name="visShowName" checked> Name</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowHeadline" name="visShowHeadline" checked> Berufsbezeichnung</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowPhone" name="visShowPhone" checked> Telefonnummer</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowEmail" name="visShowEmail" checked> E-Mail</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowLocation" name="visShowLocation" checked> Ort</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowAddress" name="visShowAddress"> Adresse</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowBirthDate" name="visShowBirthDate"> Geburtsdatum</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowWebsite" name="visShowWebsite" checked> Website / LinkedIn</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowProfile" name="visShowProfile" checked> Profiltext</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowExperience" name="visShowExperience" checked> Arbeitserfahrung</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowInternships" name="visShowInternships"> Praktika</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowEducation" name="visShowEducation" checked> Ausbildung</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowSkills" name="visShowSkills" checked> Skills</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowLanguages" name="visShowLanguages" checked> Sprachen</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowKnowledge" name="visShowKnowledge" checked> Kenntnisse (Skala)</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowCertifications" name="visShowCertifications"> Zertifizierungen</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowProjects" name="visShowProjects" checked> Projekte</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowInterests" name="visShowInterests" checked> Interessen</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowVolunteer" name="visShowVolunteer"> Ehrenamt</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowReferences" name="visShowReferences"> Referenzen</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowCustomSidebar" name="visShowCustomSidebar" checked> Kategorien (Sidebar)</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowCustomContent" name="visShowCustomContent" checked> Kategorien (Hauptbereich)</label>
+          </div>
         </div>
 
         <div class="form-card">
@@ -167,7 +250,7 @@
                 <option value="badges">Labels</option>
               </select>
             </label>
-            <label>Primaerfarbe
+              <label>Primärfarbe
               <input id="primaryColor" name="primaryColor" type="color" value="#1767a8">
             </label>
             <label>Hintergrund
@@ -184,7 +267,7 @@
 
         <div class="form-card">
           <h2>Elemente frei anpassen</h2>
-          <p class="field-help">Pro Element kannst du Position, Breite, Schriftgroesse und Zeilenhoehe steuern. Optional kannst du Elemente direkt in der Vorschau ziehen.</p>
+          <p class="field-help">Pro Element kannst du Position, Breite, Schriftgröße und Zeilenhöhe steuern. Optional kannst du Elemente direkt in der Vorschau ziehen.</p>
           <div class="field-grid">
             <label>Element
               <select id="layoutElement" name="layoutElement">
@@ -194,11 +277,18 @@
                 <option value="contact">Header: Kontaktzeile</option>
                 <option value="profile">Profilbereich</option>
                 <option value="experience">Berufserfahrung</option>
+                <option value="internships">Praktika</option>
                 <option value="projects">Projekte</option>
                 <option value="skills">Skills</option>
+                <option value="languages">Sprachen</option>
+                <option value="knowledge">Kenntnisse</option>
+                <option value="certifications">Zertifizierungen</option>
                 <option value="education">Ausbildung</option>
-                <option value="customSidebar">Eigene Felder (Sidebar)</option>
-                <option value="customContent">Eigene Felder (Hauptbereich)</option>
+                <option value="interests">Interessen</option>
+                <option value="volunteer">Ehrenamt</option>
+                <option value="references">Referenzen</option>
+                <option value="customSidebar">Kategorien (Sidebar)</option>
+                <option value="customContent">Kategorien (Hauptbereich)</option>
               </select>
             </label>
             <label>Horizontal (X)
@@ -213,11 +303,11 @@
               <input id="elementWidth" name="elementWidth" type="range" min="45" max="120" step="1" value="100">
               <span id="elementWidthValue" class="field-help">100 %</span>
             </label>
-            <label>Schriftgroesse
+            <label>Schriftgröße
               <input id="elementFontSize" name="elementFontSize" type="range" min="70" max="150" step="1" value="100">
               <span id="elementFontSizeValue" class="field-help">100 %</span>
             </label>
-            <label>Zeilenhoehe
+            <label>Zeilenhöhe
               <input id="elementLineHeight" name="elementLineHeight" type="range" min="90" max="220" step="1" value="140">
               <span id="elementLineHeightValue" class="field-help">1.40</span>
             </label>
@@ -227,8 +317,8 @@
             Drag-and-drop in der Vorschau aktivieren
           </label>
           <div class="inline-actions">
-            <button id="resetElementLayoutBtn" type="button" class="secondary-btn">Aktuelles Element zuruecksetzen</button>
-            <button id="resetAllElementLayoutsBtn" type="button" class="secondary-btn">Alle Elemente zuruecksetzen</button>
+            <button id="resetElementLayoutBtn" type="button" class="secondary-btn">Aktuelles Element zurücksetzen</button>
+            <button id="resetAllElementLayoutsBtn" type="button" class="secondary-btn">Alle Elemente zurücksetzen</button>
             <span class="field-help">Tipp: Im Drag-Modus in der Vorschau auf ein Element klicken und ziehen.</span>
           </div>
         </div>

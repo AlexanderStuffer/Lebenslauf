@@ -80,6 +80,7 @@
   <div id="printRoot" class="print-root"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     (function () {
       const statusEl = document.getElementById("printStatus");
@@ -144,14 +145,40 @@
             continue;
           }
           ctx.drawImage(canvas, 0, y, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
-          pages.push(pageCanvas.toDataURL("image/png"));
+          pages.push({
+            src: pageCanvas.toDataURL("image/png"),
+            width: pageCanvas.width,
+            height: pageCanvas.height
+          });
         }
         return pages;
       }
 
+      function exportPagesToPdf(pageImages, fileName) {
+        const jspdf = window.jspdf;
+        if (!jspdf || typeof jspdf.jsPDF !== "function" || !pageImages.length) {
+          return false;
+        }
+
+        const pdf = new jspdf.jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        pageImages.forEach(function (page, index) {
+          if (index > 0) {
+            pdf.addPage();
+          }
+          const drawHeight = (page.height * pageWidth) / page.width;
+          pdf.addImage(page.src, "PNG", 0, 0, pageWidth, Math.min(drawHeight, pageHeight), undefined, "FAST");
+        });
+
+        pdf.save(fileName || "lebenslauf.pdf");
+        return true;
+      }
+
       async function rasterizePreviewToPrintablePages(paper) {
         if (typeof window.html2canvas !== "function") {
-          return false;
+          return null;
         }
 
         const canvas = await window.html2canvas(paper, {
@@ -166,15 +193,15 @@
 
         const pageImages = sliceCanvasIntoPages(canvas);
         if (!pageImages.length) {
-          return false;
+          return null;
         }
 
         const stack = document.createElement("div");
         stack.className = "print-page-stack";
-        pageImages.forEach(function (src) {
+        pageImages.forEach(function (page) {
           const img = document.createElement("img");
           img.className = "print-page-image";
-          img.src = src;
+          img.src = page.src;
           img.alt = "Druckseite";
           stack.appendChild(img);
         });
@@ -182,7 +209,7 @@
         root.innerHTML = "";
         root.appendChild(stack);
         await waitForImages(stack);
-        return true;
+        return pageImages;
       }
 
       function renderAndPrint(payload) {
@@ -227,12 +254,20 @@
           .then(async function () {
             try {
               setStatus("Druckseiten werden vorbereitet...");
-              await rasterizePreviewToPrintablePages(paper);
+              return await rasterizePreviewToPrintablePages(paper);
             } catch (error) {
               console.warn("Rasterizing for print failed, fallback to DOM print", error);
+              return null;
             }
           })
-          .then(function () {
+          .then(function (pageImages) {
+            if (pageImages && exportPagesToPdf(pageImages, fileName)) {
+              setStatus("PDF wird heruntergeladen...");
+              window.setTimeout(function () {
+                window.close();
+              }, 350);
+              return;
+            }
             setStatus("Druckdialog wird geoeffnet...");
             window.setTimeout(function () {
               window.print();

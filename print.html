@@ -32,6 +32,26 @@
       justify-content: center;
     }
 
+    .print-page-stack {
+      width: 210mm;
+      margin: 0 auto;
+      background: #ffffff;
+    }
+
+    .print-page-image {
+      display: block;
+      width: 210mm;
+      height: auto;
+      margin: 0;
+      page-break-after: always;
+      break-after: page;
+    }
+
+    .print-page-image:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+
     @media print {
       @page {
         size: A4;
@@ -40,6 +60,8 @@
 
       body {
         background: #ffffff;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
 
       .print-status {
@@ -57,6 +79,7 @@
   <p id="printStatus" class="print-status">Vorschau wird empfangen...</p>
   <div id="printRoot" class="print-root"></div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script>
     (function () {
       const statusEl = document.getElementById("printStatus");
@@ -108,6 +131,60 @@
         });
       }
 
+      function sliceCanvasIntoPages(canvas) {
+        const pageHeight = Math.round(canvas.width * (297 / 210));
+        const pages = [];
+        for (let y = 0; y < canvas.height; y += pageHeight) {
+          const sliceHeight = Math.min(pageHeight, canvas.height - y);
+          const pageCanvas = document.createElement("canvas");
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sliceHeight;
+          const ctx = pageCanvas.getContext("2d");
+          if (!ctx) {
+            continue;
+          }
+          ctx.drawImage(canvas, 0, y, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+          pages.push(pageCanvas.toDataURL("image/png"));
+        }
+        return pages;
+      }
+
+      async function rasterizePreviewToPrintablePages(paper) {
+        if (typeof window.html2canvas !== "function") {
+          return false;
+        }
+
+        const canvas = await window.html2canvas(paper, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          windowWidth: paper.scrollWidth,
+          windowHeight: paper.scrollHeight,
+          scrollX: 0,
+          scrollY: 0
+        });
+
+        const pageImages = sliceCanvasIntoPages(canvas);
+        if (!pageImages.length) {
+          return false;
+        }
+
+        const stack = document.createElement("div");
+        stack.className = "print-page-stack";
+        pageImages.forEach(function (src) {
+          const img = document.createElement("img");
+          img.className = "print-page-image";
+          img.src = src;
+          img.alt = "Druckseite";
+          stack.appendChild(img);
+        });
+
+        root.innerHTML = "";
+        root.appendChild(stack);
+        await waitForImages(stack);
+        return true;
+      }
+
       function renderAndPrint(payload) {
         if (received) {
           return;
@@ -115,7 +192,7 @@
         received = true;
 
         if (!payload || typeof payload.paperHtml !== "string") {
-          setStatus("Keine gültigen Druckdaten empfangen.");
+          setStatus("Keine gueltigen Druckdaten empfangen.");
           return;
         }
 
@@ -147,8 +224,16 @@
               });
             });
           })
+          .then(async function () {
+            try {
+              setStatus("Druckseiten werden vorbereitet...");
+              await rasterizePreviewToPrintablePages(paper);
+            } catch (error) {
+              console.warn("Rasterizing for print failed, fallback to DOM print", error);
+            }
+          })
           .then(function () {
-            setStatus("Druckdialog wird geöffnet...");
+            setStatus("Druckdialog wird geoeffnet...");
             window.setTimeout(function () {
               window.print();
             }, 60);
@@ -173,13 +258,13 @@
       });
 
       window.addEventListener("afterprint", function () {
-        setStatus("Druckdialog geschlossen. Du kannst dieses Fenster schließen.");
+        setStatus("Druckdialog geschlossen. Du kannst dieses Fenster schliessen.");
       });
 
       if (window.opener && !window.opener.closed) {
         window.opener.postMessage({ type: "cv-print-ready" }, "*");
       } else {
-        setStatus("Dieses Fenster wurde ohne Druckdaten geöffnet.");
+        setStatus("Dieses Fenster wurde ohne Druckdaten geoeffnet.");
       }
     })();
   </script>

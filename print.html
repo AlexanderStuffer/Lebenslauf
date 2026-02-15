@@ -4,17 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PDF Vorschau</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
   <style>
     body {
       margin: 0;
       min-height: 100vh;
       background: #eff3f8;
       color: #1f2a37;
-      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      font-family: system-ui, sans-serif;
     }
 
     .print-status {
@@ -60,8 +56,6 @@
 
       body {
         background: #ffffff;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
       }
 
       .print-status {
@@ -79,7 +73,6 @@
   <p id="printStatus" class="print-status">Vorschau wird empfangen...</p>
   <div id="printRoot" class="print-root"></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     (function () {
@@ -91,20 +84,6 @@
         if (statusEl) {
           statusEl.textContent = text;
         }
-      }
-
-      function applyInlineCss(cssText) {
-        const existing = document.getElementById("printInlineCss");
-        if (existing) {
-          existing.remove();
-        }
-        if (!cssText || typeof cssText !== "string") {
-          return;
-        }
-        const style = document.createElement("style");
-        style.id = "printInlineCss";
-        style.textContent = cssText;
-        document.head.appendChild(style);
       }
 
       function waitForImages(container) {
@@ -132,28 +111,6 @@
         });
       }
 
-      function sliceCanvasIntoPages(canvas) {
-        const pageHeight = Math.round(canvas.width * (297 / 210));
-        const pages = [];
-        for (let y = 0; y < canvas.height; y += pageHeight) {
-          const sliceHeight = Math.min(pageHeight, canvas.height - y);
-          const pageCanvas = document.createElement("canvas");
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = sliceHeight;
-          const ctx = pageCanvas.getContext("2d");
-          if (!ctx) {
-            continue;
-          }
-          ctx.drawImage(canvas, 0, y, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
-          pages.push({
-            src: pageCanvas.toDataURL("image/png"),
-            width: pageCanvas.width,
-            height: pageCanvas.height
-          });
-        }
-        return pages;
-      }
-
       function exportPagesToPdf(pageImages, fileName) {
         const jspdf = window.jspdf;
         if (!jspdf || typeof jspdf.jsPDF !== "function" || !pageImages.length) {
@@ -168,34 +125,23 @@
           if (index > 0) {
             pdf.addPage();
           }
-          const drawHeight = (page.height * pageWidth) / page.width;
-          pdf.addImage(page.src, "PNG", 0, 0, pageWidth, Math.min(drawHeight, pageHeight), undefined, "FAST");
+          const sourceWidth = Number(page.width) || 1;
+          const sourceHeight = Number(page.height) || 1;
+          const widthScale = pageWidth / sourceWidth;
+          const heightScale = pageHeight / sourceHeight;
+          const fitScale = Math.min(widthScale, heightScale);
+          const drawWidth = sourceWidth * fitScale;
+          const drawHeight = sourceHeight * fitScale;
+          const drawX = (pageWidth - drawWidth) / 2;
+          const drawY = (pageHeight - drawHeight) / 2;
+          pdf.addImage(page.src, "PNG", drawX, drawY, drawWidth, drawHeight, undefined, "FAST");
         });
 
         pdf.save(fileName || "lebenslauf.pdf");
         return true;
       }
 
-      async function rasterizePreviewToPrintablePages(paper) {
-        if (typeof window.html2canvas !== "function") {
-          return null;
-        }
-
-        const canvas = await window.html2canvas(paper, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          windowWidth: paper.scrollWidth,
-          windowHeight: paper.scrollHeight,
-          scrollX: 0,
-          scrollY: 0
-        });
-
-        const pageImages = sliceCanvasIntoPages(canvas);
-        if (!pageImages.length) {
-          return null;
-        }
-
+      async function renderPagePreview(pageImages) {
         const stack = document.createElement("div");
         stack.className = "print-page-stack";
         pageImages.forEach(function (page) {
@@ -209,25 +155,16 @@
         root.innerHTML = "";
         root.appendChild(stack);
         await waitForImages(stack);
-        return pageImages;
       }
 
-      function renderAndPrint(payload) {
+      function renderAndDownload(payload) {
         if (received) {
           return;
         }
         received = true;
 
-        if (!payload || typeof payload.paperHtml !== "string") {
+        if (!payload || !Array.isArray(payload.pageImages) || !payload.pageImages.length) {
           setStatus("Keine gueltigen Druckdaten empfangen.");
-          return;
-        }
-
-        applyInlineCss(payload.cssText);
-        root.innerHTML = payload.paperHtml;
-        const paper = root.querySelector(".cv-paper");
-        if (!paper) {
-          setStatus("Vorschau konnte nicht aufgebaut werden.");
           return;
         }
 
@@ -236,64 +173,45 @@
           document.title = fileName;
         }
 
-        setStatus("Vorschau wird vorbereitet...");
-        const fontPromise = document.fonts && document.fonts.ready
-          ? document.fonts.ready.catch(function () {
-              return undefined;
-            })
-          : Promise.resolve();
-
-        Promise.all([fontPromise, waitForImages(root)])
+        setStatus("PDF-Seiten werden vorbereitet...");
+        renderPagePreview(payload.pageImages)
           .then(function () {
-            return new Promise(function (resolve) {
-              requestAnimationFrame(function () {
-                requestAnimationFrame(resolve);
-              });
-            });
-          })
-          .then(async function () {
-            try {
-              setStatus("Druckseiten werden vorbereitet...");
-              return await rasterizePreviewToPrintablePages(paper);
-            } catch (error) {
-              console.warn("Rasterizing for print failed, fallback to DOM print", error);
-              return null;
+            if (!exportPagesToPdf(payload.pageImages, fileName)) {
+              throw new Error("PDF export failed");
             }
-          })
-          .then(function (pageImages) {
-            if (pageImages && exportPagesToPdf(pageImages, fileName)) {
-              setStatus("PDF wird heruntergeladen...");
-              window.setTimeout(function () {
-                window.close();
-              }, 350);
-              return;
-            }
-            setStatus("Druckdialog wird geoeffnet...");
+            setStatus("PDF wird heruntergeladen...");
             window.setTimeout(function () {
-              window.print();
-            }, 60);
+              window.close();
+            }, 350);
           })
-          .catch(function () {
-            setStatus("Druckdialog konnte nicht vorbereitet werden.");
+          .catch(function (error) {
+            console.error(error);
+            setStatus("PDF konnte nicht erstellt werden.");
           });
       }
+
+      window.receiveCvPayload = function (payload) {
+        if (window.opener && !window.opener.closed) {
+          window.opener.postMessage({ type: "cv-print-received" }, "*");
+        }
+        renderAndDownload(payload);
+      };
 
       window.addEventListener("message", function (event) {
         const data = event.data;
         if (!data || typeof data !== "object") {
           return;
         }
+        if (data.type === "cv-print-ping") {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage({ type: "cv-print-request-payload" }, "*");
+          }
+          return;
+        }
         if (data.type !== "cv-print-payload") {
           return;
         }
-        if (window.opener && !window.opener.closed) {
-          window.opener.postMessage({ type: "cv-print-received" }, "*");
-        }
-        renderAndPrint(data.payload);
-      });
-
-      window.addEventListener("afterprint", function () {
-        setStatus("Druckdialog geschlossen. Du kannst dieses Fenster schliessen.");
+        window.receiveCvPayload(data.payload);
       });
 
       if (window.opener && !window.opener.closed) {

@@ -1953,106 +1953,106 @@
 
   function setDemoData() {
     state.basics = {
-      fullName: "Maya Schneider",
-      headline: "Product Designerin und Frontend Entwicklerin",
-      email: "maya.schneider@mail.de",
-      phone: "+49 176 45897631",
-      location: "München, Deutschland",
-      address: "Prinzregentenstraße 18, 80538 München",
-      birthDate: "14.06.1994",
-      website: "portfolio-maya.de",
-      photoUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=500&q=80",
+      fullName: "Max Musterdemo",
+      headline: "Fiktives Demo-Profil (Beispiel)",
+      email: "demo.person@example.test",
+      phone: "1234567890",
+      location: "Beispielstadt, Testland",
+      address: "Musterweg 1, 12345 Beispielstadt",
+      birthDate: "01.01.1990",
+      website: "https://portfolio-demo.test",
+      photoUrl: "https://dummyimage.com/600x800/e5e7eb/4b5563.png&text=Demo+Foto",
       photoDataUrl: "",
       summary:
-        "Kreative Produktdesignerin mit 6+ Jahren Erfahrung in der Entwicklung digitaler Produkte. Fokus auf nutzerzentrierte Oberflächen, klare Informationsarchitektur und saubere Zusammenarbeit mit Engineering-Teams.",
-      skills: "Figma, UX Research, HTML/CSS, JavaScript, TypeScript, React, Kommunikation",
-      strengths: "Empathie, analytisches Denken, strukturierte Arbeitsweise",
-      weaknesses: "zu perfektionistisch, manchmal zu viele Aufgaben parallel",
-      traits: "teamfähig, sozial, schnelle Auffassungsgabe, zuverlässig",
-      interests: "Reisen, Fotografie, Trailrunning",
-      volunteer: "Mentorin bei Women in Tech Meetups (seit 2023)",
-      references: "Auf Anfrage verfügbar"
+        "Diese Angaben sind komplett frei erfundene Demo-Daten zum Testen von Layout und PDF-Export.",
+      skills: "DemoSkill A, DemoSkill B, DemoSkill C, DemoTool X",
+      strengths: "Strukturiert, teamorientiert, analytisch",
+      weaknesses: "Ungeduld, Perfektionismus",
+      traits: "Teamfaehig, sozial, lernt schnell",
+      interests: "Lesen, Sport, Reisen",
+      volunteer: "Fiktives Ehrenamt im Demo-Verein",
+      references: "Nur Demo - keine echten Referenzen"
     };
 
     state.experiences = [
       {
         id: uid("exp"),
-        role: "Senior Product Designerin",
-        company: "NordTech AG",
-        location: "München",
-        start: "03/2022",
+        role: "Beispielrolle A (Demo)",
+        company: "Firma Beispiel Eins (fiktiv)",
+        location: "Beispielstadt",
+        start: "01/2021",
         end: "Heute",
         description:
-          "Leitung von Designprojekten für B2B-Plattformen. Aufbau eines komponentenbasierten Design-Systems und enge Abstimmung mit Frontend-Teams."
+          "Komplett erfundener Beispieltext fuer eine Position. Dient nur zur Layout-Demonstration."
       },
       {
         id: uid("exp"),
-        role: "UI/UX Designerin",
-        company: "Blue Pixel Studio",
-        location: "Augsburg",
-        start: "07/2019",
-        end: "02/2022",
+        role: "Beispielrolle B (Demo)",
+        company: "Firma Beispiel Zwei (fiktiv)",
+        location: "Musterort",
+        start: "06/2018",
+        end: "12/2020",
         description:
-          "Konzeption, Prototyping und Testing für Web- und Mobile-Produkte. Verbesserung der Conversion im Onboarding um 18%."
+          "Weitere fiktive Aufgabenbeschreibung, damit der Lebenslauf realistisch gefuellt wirkt."
       }
     ];
 
     state.education = [
       {
         id: uid("edu"),
-        degree: "M.A. Interaction Design",
-        school: "Hochschule Augsburg",
-        start: "10/2017",
-        end: "09/2019",
-        description: "Schwerpunkt Human-Centered Design und digitale Service-Erlebnisse."
+        degree: "Demo-Studiengang (M.A.)",
+        school: "Demo Hochschule (fiktiv)",
+        start: "10/2016",
+        end: "09/2018",
+        description: "Fiktiver Ausbildungseintrag fuer die Vorschau."
       },
       {
         id: uid("edu"),
-        degree: "B.A. Kommunikationsdesign",
-        school: "FH München",
-        start: "10/2013",
-        end: "09/2017",
-        description: "Vertiefung in visuelle Systeme, Typografie und Interface-Konzeption."
+        degree: "Demo-Bachelor",
+        school: "Muster Akademie (fiktiv)",
+        start: "10/2012",
+        end: "09/2016",
+        description: "Weiterer rein erfundener Ausbildungseintrag."
       }
     ];
 
     state.internships = [
       {
         id: uid("intern"),
-        role: "UX Praktikantin",
-        company: "DesignLab Studio",
-        location: "München",
-        start: "04/2018",
-        end: "09/2018",
-        description: "Mitarbeit an User-Interviews, Wireframes und klickbaren Prototypen."
+        role: "Demo-Praktikum",
+        company: "Praktikum GmbH (fiktiv)",
+        location: "Beispielstadt",
+        start: "03/2015",
+        end: "08/2015",
+        description: "Fiktive Praktikumsbeschreibung fuer die Demo-Ansicht."
       }
     ];
 
     state.languages = [
-      { id: uid("lang"), name: "Deutsch", level: "Muttersprache" },
-      { id: uid("lang"), name: "Englisch", level: "C1" },
-      { id: uid("lang"), name: "Französisch", level: "B1" }
+      { id: uid("lang"), name: "Deutsch", level: "C2" },
+      { id: uid("lang"), name: "Englisch", level: "B2" },
+      { id: uid("lang"), name: "Spanisch", level: "A2" }
     ];
 
     state.knowledgeItems = [
-      { id: uid("know"), name: "MS Office", level: "4" },
-      { id: uid("know"), name: "Figma", level: "5" },
-      { id: uid("know"), name: "Jira/Confluence", level: "4" }
+      { id: uid("know"), name: "Demo-Tool 1", level: "4" },
+      { id: uid("know"), name: "Demo-Tool 2", level: "3" },
+      { id: uid("know"), name: "Demo-Tool 3", level: "5" }
     ];
 
     state.certifications = [
       {
         id: uid("cert"),
-        title: "Google UX Certificate",
-        issuer: "Google",
-        date: "2023",
+        title: "Demo-Zertifikat 1",
+        issuer: "Demo Academy",
+        date: "2024",
         details: ""
       },
       {
         id: uid("cert"),
-        title: "Scrum Foundation",
-        issuer: "Scrum.org",
-        date: "2022",
+        title: "Demo-Zertifikat 2",
+        issuer: "Test Institute",
+        date: "2023",
         details: ""
       }
     ];
@@ -2060,22 +2060,22 @@
     state.projects = [
       {
         id: uid("proj"),
-        title: "E-Commerce Plattform Relaunch",
+        title: "Projekt Alpha (Demo)",
         type: "client",
-        client: "Modehaus Lenz GmbH",
-        role: "UX + Frontend Lead",
-        teamSize: "6 Personen",
-        status: "Live",
-        start: "01/2024",
-        end: "08/2024",
-        projectUrl: "https://example.com/case-study",
-        repoUrl: "",
-        technologies: "React, TypeScript, Tailwind, Storybook",
+        client: "Beispielkunde GmbH (fiktiv)",
+        role: "Demo Lead",
+        teamSize: "5 Personen",
+        status: "Abgeschlossen",
+        start: "02/2024",
+        end: "07/2024",
+        projectUrl: "https://projekt-alpha.example.test",
+        repoUrl: "https://github.com/demo/projekt-alpha",
+        technologies: "HTML, CSS, JavaScript",
         description:
-          "Neukonzeption der Plattform mit Fokus auf Checkout-Optimierung und mobile Performance.",
-        highlights: "Conversion +22%\\nLighthouse Mobile 97\\nDesign-System aufgebaut",
+          "Fiktives Projekt fuer Demonstrationszwecke.",
+        highlights: "Demo-Feature 1\\nDemo-Feature 2\\nDemo-Feature 3",
         imageUrl:
-          "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80",
+          "https://dummyimage.com/1200x700/dbe7f3/334155.png&text=Projekt+Alpha",
         imageDataUrl: "",
         imageFrame: "shadow",
         imageZoom: "100",
@@ -2084,19 +2084,19 @@
       },
       {
         id: uid("proj"),
-        title: "Private Budget App",
+        title: "Projekt Beta (Demo)",
         type: "private",
         client: "",
-        role: "Full-Stack Developer",
+        role: "Full-Stack Demo",
         teamSize: "Solo",
         status: "In Arbeit",
-        start: "09/2024",
+        start: "08/2024",
         end: "",
-        projectUrl: "budget-lab.dev",
-        repoUrl: "github.com/maya/budget-lab",
-        technologies: "Vue, Node.js, PostgreSQL, Docker",
-        description: "App zur Analyse von Ausgaben mit Forecast-Ansicht und wiederkehrenden Zielen.",
-        highlights: "Eigenes API Design\\nCI/CD mit Tests\\nDeployment via Docker",
+        projectUrl: "https://projekt-beta.example.test",
+        repoUrl: "https://github.com/demo/projekt-beta",
+        technologies: "Vue, Node.js, Docker",
+        description: "Noch ein rein erfundenes Projekt fuer die Demo.",
+        highlights: "Mock API\\nTestdaten\\nPreview Deployment",
         imageUrl: "",
         imageDataUrl: "",
         imageFrame: "clean",
@@ -2109,22 +2109,22 @@
     state.customFields = [
       {
         id: uid("custom"),
-        label: "Sprachen",
-        value: "Deutsch C2, Englisch C1",
+        label: "Demo-Kategorie Sidebar",
+        value: "Fiktiver Eintrag A, Fiktiver Eintrag B",
         placement: "sidebar",
         display: "line"
       },
       {
         id: uid("custom"),
-        label: "Zertifikate",
-        value: "Google UX Certificate, Scrum Foundation",
+        label: "Demo-Kategorie Inhalt",
+        value: "Demo-Stichwort 1, Demo-Stichwort 2",
         placement: "content",
         display: "tags"
       },
       {
         id: uid("custom"),
-        label: "GitHub",
-        value: "github.com/maya-dev",
+        label: "Demo-Link",
+        value: "demo.example.test",
         placement: "header",
         display: "line"
       }
@@ -2360,57 +2360,200 @@
     renderPreview();
   }
 
-  function collectCurrentStyleText() {
-    return Array.from(document.styleSheets)
-      .map(function (sheet) {
-        try {
-          const rules = sheet.cssRules;
-          if (!rules) {
-            return "";
-          }
-          return Array.from(rules)
-            .map(function (rule) {
-              return rule.cssText;
-            })
-            .join("\n");
-        } catch (error) {
-          return "";
+  async function waitForImages(container) {
+    const images = Array.from(container.querySelectorAll("img"));
+    if (!images.length) {
+      return;
+    }
+    await Promise.all(
+      images.map(function (img) {
+        if (img.complete && img.naturalWidth > 0) {
+          return Promise.resolve();
         }
+        return new Promise(function (resolve) {
+          const timeoutId = window.setTimeout(function () {
+            img.removeEventListener("load", done);
+            img.removeEventListener("error", done);
+            resolve();
+          }, 8000);
+          const done = function () {
+            window.clearTimeout(timeoutId);
+            img.removeEventListener("load", done);
+            img.removeEventListener("error", done);
+            resolve();
+          };
+          img.addEventListener("load", done);
+          img.addEventListener("error", done);
+        });
       })
-      .filter(Boolean)
-      .join("\n");
+    );
   }
 
-  function buildPrintPayload(fileName) {
+  function sliceCanvasIntoPages(canvas) {
+    const pageHeight = (canvas.width * 297) / 210;
+    const pages = [];
+    let y = 0;
+    let pageIndex = 0;
+    while (y < canvas.height) {
+      let nextY = Math.round((pageIndex + 1) * pageHeight);
+      if (nextY <= y) {
+        nextY = y + 1;
+      }
+      nextY = Math.min(nextY, canvas.height);
+      const sliceHeight = nextY - y;
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sliceHeight;
+      const ctx = pageCanvas.getContext("2d");
+      if (!ctx) {
+        y = nextY;
+        pageIndex += 1;
+        continue;
+      }
+      ctx.drawImage(canvas, 0, y, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+      pages.push({
+        src: pageCanvas.toDataURL("image/png"),
+        width: pageCanvas.width,
+        height: pageCanvas.height
+      });
+      y = nextY;
+      pageIndex += 1;
+    }
+    return pages;
+  }
+
+  async function buildPrintPayload(fileName) {
+    const html2canvas = window.html2canvas;
+    if (typeof html2canvas !== "function") {
+      throw new Error("html2canvas missing");
+    }
+    const previewRect = previewPaper.getBoundingClientRect();
+    const exportWidth = Math.max(320, Math.round(previewRect.width || 794));
+    const exportMinHeight = Math.round((exportWidth * 297) / 210);
+    const captureScale = Math.max(2, Math.min(3, (window.devicePixelRatio || 1) * 2));
+
+    const exportStage = document.createElement("div");
+    exportStage.style.position = "fixed";
+    exportStage.style.left = "-120000px";
+    exportStage.style.top = "0";
+    exportStage.style.width = exportWidth + "px";
+    exportStage.style.opacity = "0";
+    exportStage.style.pointerEvents = "none";
+
     const exportPaper = previewPaper.cloneNode(true);
     exportPaper.classList.remove("layout-edit-mode", "is-layout-dragging");
     exportPaper.removeAttribute("data-active-layout-element");
     exportPaper.querySelectorAll(".is-active-layout-element").forEach(function (element) {
       element.classList.remove("is-active-layout-element");
     });
-    exportPaper.style.width = "210mm";
-    exportPaper.style.minHeight = "297mm";
-    return {
-      type: "cv-print-payload",
-      payload: {
-        fileName: fileName,
-        paperHtml: exportPaper.outerHTML,
-        cssText: collectCurrentStyleText()
+    exportPaper.style.width = exportWidth + "px";
+    exportPaper.style.minHeight = exportMinHeight + "px";
+    exportStage.appendChild(exportPaper);
+    document.body.appendChild(exportStage);
+
+    try {
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (fontError) {
+          console.warn("Fonts not ready for export", fontError);
+        }
       }
-    };
+      await waitForImages(exportPaper);
+      await new Promise(function (resolve) {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(resolve);
+        });
+      });
+
+      let canvas = null;
+      try {
+        canvas = await html2canvas(exportPaper, {
+          scale: captureScale,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          foreignObjectRendering: true,
+          windowWidth: exportPaper.scrollWidth,
+          windowHeight: exportPaper.scrollHeight,
+          scrollX: 0,
+          scrollY: 0
+        });
+      } catch (foError) {
+        console.warn("foreignObject render failed, fallback to standard canvas render", foError);
+        canvas = await html2canvas(exportPaper, {
+          scale: captureScale,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          foreignObjectRendering: false,
+          windowWidth: exportPaper.scrollWidth,
+          windowHeight: exportPaper.scrollHeight,
+          scrollX: 0,
+          scrollY: 0
+        });
+      }
+
+      const pageImages = sliceCanvasIntoPages(canvas);
+      if (!pageImages.length) {
+        throw new Error("no page images generated");
+      }
+
+      return {
+        type: "cv-print-payload",
+        payload: {
+          fileName: fileName,
+          pageImages: pageImages
+        }
+      };
+    } finally {
+      exportStage.remove();
+    }
   }
 
-  async function exportPdf(fileName) {
-    const message = buildPrintPayload(fileName);
+  function openPrintWindow() {
+    return window.open("print.html", "_blank", "width=1200,height=900");
+  }
+
+  async function exportPdf(fileName, existingPrintWindow) {
+    const payload = await buildPrintPayload(fileName);
+    await sendPrintPayload(payload, existingPrintWindow);
+  }
+
+  async function sendPrintPayload(payloadMessage, existingPrintWindow) {
     await new Promise(function (resolve, reject) {
       let timerId = null;
-      let printWindow = null;
+      let resendTimerId = null;
+      let closedTimerId = null;
+      const printWindow = existingPrintWindow || openPrintWindow();
 
       const cleanup = function () {
         if (timerId !== null) {
           window.clearTimeout(timerId);
         }
+        if (resendTimerId !== null) {
+          window.clearInterval(resendTimerId);
+        }
+        if (closedTimerId !== null) {
+          window.clearInterval(closedTimerId);
+        }
         window.removeEventListener("message", onMessage);
+      };
+
+      let delivered = false;
+
+      const tryDeliver = function () {
+        if (!printWindow || printWindow.closed) {
+          return;
+        }
+        try {
+          if (typeof printWindow.receiveCvPayload === "function") {
+            delivered = true;
+            printWindow.receiveCvPayload(payloadMessage.payload);
+            return;
+          }
+          printWindow.postMessage({ type: "cv-print-ping" }, "*");
+        } catch (deliveryError) {
+          console.warn("Failed to deliver print payload", deliveryError);
+        }
       };
 
       const onMessage = function (event) {
@@ -2422,26 +2565,44 @@
           return;
         }
         if (data.type === "cv-print-ready") {
-          printWindow.postMessage(message, "*");
+          tryDeliver();
           return;
         }
         if (data.type === "cv-print-received") {
           cleanup();
           resolve();
+          return;
+        }
+        if (data.type === "cv-print-request-payload") {
+          tryDeliver();
+          return;
         }
       };
 
       window.addEventListener("message", onMessage);
-      printWindow = window.open("print.html", "_blank", "width=1200,height=900");
       if (!printWindow) {
         cleanup();
         reject(new Error("print window blocked"));
         return;
       }
+
+      tryDeliver();
+      resendTimerId = window.setInterval(function () {
+        if (!delivered) {
+          tryDeliver();
+        }
+      }, 350);
+      closedTimerId = window.setInterval(function () {
+        if (printWindow.closed) {
+          cleanup();
+          reject(new Error("print window closed"));
+        }
+      }, 500);
+
       timerId = window.setTimeout(function () {
         cleanup();
         reject(new Error("print window timeout"));
-      }, 12000);
+      }, 20000);
     });
   }
 
@@ -2636,9 +2797,13 @@
     downloadPdfBtn.textContent = "PDF wird erstellt...";
 
     const fileNameBase = stateFileNameBase();
+    const printWindow = openPrintWindow();
 
     try {
-      await exportPdf((fileNameBase || "lebenslauf") + ".pdf");
+      if (!printWindow) {
+        throw new Error("print window blocked");
+      }
+      await exportPdf((fileNameBase || "lebenslauf") + ".pdf", printWindow);
     } catch (error) {
       console.error(error);
       window.alert(

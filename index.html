@@ -15,7 +15,12 @@
       <h1>Lebenslauf-Builder</h1>
       <p>Daten eintragen, live ansehen, als PDF herunterladen.</p>
     </div>
-    <button id="downloadPdfBtn" class="download-btn" type="button">Als PDF herunterladen</button>
+    <div class="header-actions">
+      <button id="saveJsonBtn" class="secondary-btn" type="button">Als JSON speichern</button>
+      <button id="loadJsonBtn" class="secondary-btn" type="button">JSON laden</button>
+      <button id="downloadPdfBtn" class="download-btn" type="button">Als PDF herunterladen</button>
+      <input id="importJsonInput" type="file" accept=".json,application/json" hidden>
+    </div>
   </header>
 
   <main class="app-grid">

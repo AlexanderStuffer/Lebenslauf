@@ -10,16 +10,17 @@ Lokales Tool zum Erstellen eines Lebenslaufs mit:
 - Zuschnitt-/Positionierungsoptionen fuer Bilder (Zoom, X/Y)
 - Projekte-Bereich mit optionalen Feldern (Kunde, Rolle, Status, Links, Highlights)
 - Benutzerdefinierte Felder mit frei waehlbarer Position (Header, Sidebar, Hauptbereich)
+- JSON-Export/Import zum Speichern und spaeteren Weiterbearbeiten des kompletten Zustands
 - PDF-Download per Button
 
 ## Start
 
-1. Datei `index.html` im Browser oeffnen.
+1. Datei `index.html` im Browser öffnen.
 2. Daten links eintragen.
-3. Vorschau rechts live pruefen.
+3. Vorschau rechts live prüfen.
 4. Auf `Als PDF herunterladen` klicken.
 
 ## Hinweise
 
-- Fuer den PDF-Export wird `html2pdf.js` von einem CDN geladen. Dafuer ist eine Internetverbindung noetig.
+- Für den PDF-Export wird `html2pdf.js` von einem CDN geladen. Dafuer ist eine Internetverbindung noetig.
 - Wenn du schnell ein Beispiel sehen willst, klicke auf `Demo-Daten laden`.

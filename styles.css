@@ -49,6 +49,17 @@ body {
   font-size: 0.92rem;
 }
 
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.header-actions button {
+  white-space: nowrap;
+}
+
 .app-grid {
   display: grid;
   grid-template-columns: minmax(320px, 480px) 1fr;
@@ -372,6 +383,14 @@ textarea {
   flex-wrap: wrap;
   gap: 10px;
   font-size: 14px;
+}
+
+.cv-meta-item {
+  display: inline-block;
+}
+
+.cv-meta-phone {
+  white-space: nowrap;
 }
 
 .cv-header.header-align-center .cv-meta {
@@ -734,6 +753,14 @@ textarea {
   .app-header {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .header-actions {
+    justify-content: stretch;
+  }
+
+  .header-actions button {
+    flex: 1 1 auto;
   }
 
   .field-grid {

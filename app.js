@@ -45,6 +45,9 @@
   const previewPaper = document.getElementById("previewPaper");
   const photoFileInput = document.getElementById("photoFile");
   const clearPhotoBtn = document.getElementById("clearPhotoBtn");
+  const saveJsonBtn = document.getElementById("saveJsonBtn");
+  const loadJsonBtn = document.getElementById("loadJsonBtn");
+  const importJsonInput = document.getElementById("importJsonInput");
   const downloadPdfBtn = document.getElementById("downloadPdfBtn");
   const resetDemoBtn = document.getElementById("resetDemoBtn");
   const layoutElementInput = document.getElementById("layoutElement");
@@ -71,6 +74,9 @@
     !previewPaper ||
     !photoFileInput ||
     !clearPhotoBtn ||
+    !saveJsonBtn ||
+    !loadJsonBtn ||
+    !importJsonInput ||
     !downloadPdfBtn ||
     !resetDemoBtn ||
     !layoutElementInput ||
@@ -390,6 +396,232 @@
     };
   }
 
+  function stateFileNameBase() {
+    return String(state.basics.fullName || "lebenslauf")
+      .trim()
+      .replace(/\s+/g, "_")
+      .replace(/[^\w\-]/g, "");
+  }
+
+  function textOrEmpty(value) {
+    return String(value || "");
+  }
+
+  function normalizeElementLayoutsMap(rawMap) {
+    const source = rawMap && typeof rawMap === "object" ? rawMap : {};
+    const normalized = {};
+    layoutElementIds.forEach(function (id) {
+      normalized[id] = normalizeElementLayout(source[id]);
+    });
+    return normalized;
+  }
+
+  function normalizeBasics(rawBasics) {
+    const source = rawBasics && typeof rawBasics === "object" ? rawBasics : {};
+    return {
+      fullName: textOrEmpty(source.fullName),
+      headline: textOrEmpty(source.headline),
+      email: textOrEmpty(source.email),
+      phone: textOrEmpty(source.phone),
+      location: textOrEmpty(source.location),
+      website: textOrEmpty(source.website),
+      photoUrl: textOrEmpty(source.photoUrl),
+      photoDataUrl: textOrEmpty(source.photoDataUrl),
+      summary: textOrEmpty(source.summary),
+      skills: textOrEmpty(source.skills)
+    };
+  }
+
+  function normalizeExperience(rawEntry) {
+    const source = rawEntry && typeof rawEntry === "object" ? rawEntry : {};
+    return {
+      id: textOrEmpty(source.id) || uid("exp"),
+      role: textOrEmpty(source.role),
+      company: textOrEmpty(source.company),
+      location: textOrEmpty(source.location),
+      start: textOrEmpty(source.start),
+      end: textOrEmpty(source.end),
+      description: textOrEmpty(source.description)
+    };
+  }
+
+  function normalizeEducation(rawEntry) {
+    const source = rawEntry && typeof rawEntry === "object" ? rawEntry : {};
+    return {
+      id: textOrEmpty(source.id) || uid("edu"),
+      degree: textOrEmpty(source.degree),
+      school: textOrEmpty(source.school),
+      start: textOrEmpty(source.start),
+      end: textOrEmpty(source.end),
+      description: textOrEmpty(source.description)
+    };
+  }
+
+  function normalizeProject(rawEntry) {
+    const source = rawEntry && typeof rawEntry === "object" ? rawEntry : {};
+    return {
+      id: textOrEmpty(source.id) || uid("proj"),
+      title: textOrEmpty(source.title),
+      type: sanitizeOption(textOrEmpty(source.type) || "private", ["private", "work", "client"], "private"),
+      client: textOrEmpty(source.client),
+      role: textOrEmpty(source.role),
+      teamSize: textOrEmpty(source.teamSize),
+      status: textOrEmpty(source.status),
+      start: textOrEmpty(source.start),
+      end: textOrEmpty(source.end),
+      projectUrl: textOrEmpty(source.projectUrl),
+      repoUrl: textOrEmpty(source.repoUrl),
+      technologies: textOrEmpty(source.technologies),
+      description: textOrEmpty(source.description),
+      highlights: textOrEmpty(source.highlights),
+      imageUrl: textOrEmpty(source.imageUrl),
+      imageDataUrl: textOrEmpty(source.imageDataUrl),
+      imageFrame: sanitizeOption(textOrEmpty(source.imageFrame) || "clean", ["clean", "double", "shadow", "polaroid", "none"], "clean"),
+      imageZoom: String(Math.round(safeNumber(source.imageZoom, 100, 80, 180))),
+      imageX: String(Math.round(safeNumber(source.imageX, 50, 0, 100))),
+      imageY: String(Math.round(safeNumber(source.imageY, 50, 0, 100)))
+    };
+  }
+
+  function normalizeCustomField(rawEntry) {
+    const source = rawEntry && typeof rawEntry === "object" ? rawEntry : {};
+    return {
+      id: textOrEmpty(source.id) || uid("custom"),
+      label: textOrEmpty(source.label),
+      value: textOrEmpty(source.value),
+      placement: sanitizeOption(textOrEmpty(source.placement) || "content", ["content", "sidebar", "header"], "content"),
+      display: sanitizeOption(textOrEmpty(source.display) || "line", ["line", "text", "list", "tags"], "line")
+    };
+  }
+
+  function normalizeCustom(rawCustom) {
+    const source = rawCustom && typeof rawCustom === "object" ? rawCustom : {};
+    return {
+      layoutMode: sanitizeOption(textOrEmpty(source.layoutMode) || "sidebar", ["sidebar", "top"], "sidebar"),
+      templateMode: sanitizeOption(textOrEmpty(source.templateMode) || "modern", ["modern", "classic", "minimal"], "modern"),
+      fontMode: sanitizeOption(textOrEmpty(source.fontMode) || "plex", ["plex", "nunito", "playfair"], "plex"),
+      headerAlign: sanitizeOption(textOrEmpty(source.headerAlign) || "left", ["left", "center", "right"], "left"),
+      photoShape: sanitizeOption(textOrEmpty(source.photoShape) || "circle", ["circle", "rounded", "square"], "circle"),
+      photoFrame: sanitizeOption(textOrEmpty(source.photoFrame) || "clean", ["clean", "double", "shadow", "polaroid", "none"], "clean"),
+      photoZoom: String(Math.round(safeNumber(source.photoZoom, 100, 80, 180))),
+      photoX: String(Math.round(safeNumber(source.photoX, 50, 0, 100))),
+      photoY: String(Math.round(safeNumber(source.photoY, 50, 0, 100))),
+      sectionStyle: sanitizeOption(textOrEmpty(source.sectionStyle) || "line", ["line", "cards", "badges"], "line"),
+      primaryColor: textOrEmpty(source.primaryColor) || "#1767a8",
+      backgroundColor: textOrEmpty(source.backgroundColor) || "#ffffff",
+      textColor: textOrEmpty(source.textColor) || "#1a202c",
+      density: sanitizeOption(textOrEmpty(source.density) || "1", ["0", "1", "2"], "1"),
+      layoutElement: sanitizeOption(textOrEmpty(source.layoutElement) || "profile", layoutElementIds, "profile"),
+      elementDragEnabled: Boolean(source.elementDragEnabled),
+      elementLayouts: normalizeElementLayoutsMap(source.elementLayouts)
+    };
+  }
+
+  function normalizeImportedState(rawState) {
+    const source = rawState && typeof rawState === "object" ? rawState : {};
+    return {
+      basics: normalizeBasics(source.basics),
+      experiences: Array.isArray(source.experiences) ? source.experiences.map(normalizeExperience) : [],
+      education: Array.isArray(source.education) ? source.education.map(normalizeEducation) : [],
+      projects: Array.isArray(source.projects) ? source.projects.map(normalizeProject) : [],
+      customFields: Array.isArray(source.customFields) ? source.customFields.map(normalizeCustomField) : [],
+      custom: normalizeCustom(source.custom)
+    };
+  }
+
+  function exportSnapshot() {
+    ensureElementLayouts();
+    const exportedState = normalizeImportedState(state);
+    return {
+      version: 1,
+      kind: "lebenslauf-builder-state",
+      savedAt: new Date().toISOString(),
+      state: exportedState
+    };
+  }
+
+  function applyImportedSnapshot(snapshot) {
+    const payload = snapshot && typeof snapshot === "object" && snapshot.state ? snapshot.state : snapshot;
+    const normalized = normalizeImportedState(payload);
+
+    state.basics = normalized.basics;
+    state.experiences = normalized.experiences;
+    state.education = normalized.education;
+    state.projects = normalized.projects;
+    state.customFields = normalized.customFields;
+    state.custom = normalized.custom;
+  }
+
+  function triggerTextDownload(fileName, content, contentType) {
+    const blob = new Blob([content], { type: contentType });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    window.setTimeout(function () {
+      URL.revokeObjectURL(url);
+      anchor.remove();
+    }, 0);
+  }
+
+  function readFileAsText(file) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function () {
+        resolve(String(reader.result || ""));
+      };
+      reader.onerror = function () {
+        reject(new Error("FileReader failed"));
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  function downloadStateAsJson() {
+    const snapshot = exportSnapshot();
+    const fileName = (stateFileNameBase() || "lebenslauf") + ".json";
+    const content = JSON.stringify(snapshot, null, 2);
+    triggerTextDownload(fileName, content, "application/json");
+  }
+
+  async function importStateFromJsonFile(fileInput) {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) {
+      return;
+    }
+    try {
+      const rawText = await readFileAsText(file);
+      const parsed = JSON.parse(rawText);
+      const isWrappedState =
+        parsed &&
+        typeof parsed === "object" &&
+        parsed.kind === "lebenslauf-builder-state" &&
+        parsed.state &&
+        typeof parsed.state === "object";
+      const isPlainState =
+        parsed &&
+        typeof parsed === "object" &&
+        parsed.basics &&
+        typeof parsed.basics === "object" &&
+        parsed.custom &&
+        typeof parsed.custom === "object";
+      if (!isWrappedState && !isPlainState) {
+        throw new Error("Unsupported JSON format");
+      }
+      applyImportedSnapshot(parsed);
+      renderFormLists();
+      setFormValuesFromState();
+      renderPreview();
+    } catch (error) {
+      console.error(error);
+      window.alert("JSON konnte nicht geladen werden. Bitte pruefe das Dateiformat.");
+    } finally {
+      fileInput.value = "";
+    }
+  }
+
   function createExperienceCard(entry, index) {
     const wrapper = document.createElement("article");
     wrapper.className = "entry-card";
@@ -690,13 +922,24 @@
       return field.placement === "content" && String(field.value || "").trim();
     });
 
-    const metaItems = [state.basics.email, state.basics.phone, state.basics.location, state.basics.website]
-      .map(function (value) {
-        return String(value || "").trim();
+    const metaItems = [
+      { value: state.basics.email, className: "" },
+      { value: state.basics.phone, className: "cv-meta-phone" },
+      { value: state.basics.location, className: "" },
+      { value: state.basics.website, className: "" }
+    ]
+      .map(function (item) {
+        return {
+          value: String(item.value || "").trim(),
+          className: String(item.className || "")
+        };
       })
-      .filter(Boolean)
-      .map(function (value) {
-        return `<span>${escapeHtml(value)}</span>`;
+      .filter(function (item) {
+        return Boolean(item.value);
+      })
+      .map(function (item) {
+        const className = item.className ? " cv-meta-item " + item.className : " cv-meta-item";
+        return `<span class="${className.trim()}">${escapeHtml(item.value)}</span>`;
       });
 
     headerCustomFields.forEach(function (field) {
@@ -706,7 +949,7 @@
       }
       const label = String(field.label || "").trim();
       const text = label ? label + ": " + compactValue : compactValue;
-      metaItems.push(`<span>${escapeHtml(text)}</span>`);
+      metaItems.push(`<span class="cv-meta-item">${escapeHtml(text)}</span>`);
     });
 
     const meta = metaItems.join("");
@@ -1624,16 +1867,20 @@
   document.getElementById("addProjectBtn")?.addEventListener("click", addProject);
   document.getElementById("addCustomFieldBtn")?.addEventListener("click", addCustomField);
   resetDemoBtn.addEventListener("click", setDemoData);
+  saveJsonBtn.addEventListener("click", downloadStateAsJson);
+  loadJsonBtn.addEventListener("click", function () {
+    importJsonInput.click();
+  });
+  importJsonInput.addEventListener("change", async function () {
+    await importStateFromJsonFile(importJsonInput);
+  });
 
   downloadPdfBtn.addEventListener("click", async function () {
     const originalLabel = downloadPdfBtn.textContent;
     downloadPdfBtn.disabled = true;
     downloadPdfBtn.textContent = "PDF wird erstellt...";
 
-    const fileNameBase = String(state.basics.fullName || "lebenslauf")
-      .trim()
-      .replace(/\s+/g, "_")
-      .replace(/[^\w\-]/g, "");
+    const fileNameBase = stateFileNameBase();
 
     try {
       await exportPdf((fileNameBase || "lebenslauf") + ".pdf");

@@ -13,6 +13,9 @@
       photoDataUrl: "",
       summary: "",
       skills: "",
+      strengths: "",
+      weaknesses: "",
+      traits: "",
       interests: "",
       volunteer: "",
       references: ""
@@ -127,6 +130,9 @@
     { id: "skills", label: "Skills" },
     { id: "languages", label: "Sprachen" },
     { id: "knowledge", label: "Kenntnisse" },
+    { id: "strengths", label: "Stärken" },
+    { id: "weaknesses", label: "Schwächen" },
+    { id: "traits", label: "Soft Skills" },
     { id: "certifications", label: "Zertifizierungen" },
     { id: "education", label: "Ausbildung" },
     { id: "interests", label: "Interessen" },
@@ -156,6 +162,9 @@
     showSkills: true,
     showLanguages: true,
     showKnowledge: true,
+    showStrengths: true,
+    showWeaknesses: false,
+    showTraits: true,
     showCertifications: false,
     showProjects: true,
     showInterests: true,
@@ -536,6 +545,9 @@
       photoDataUrl: textOrEmpty(source.photoDataUrl),
       summary: textOrEmpty(source.summary),
       skills: textOrEmpty(source.skills),
+      strengths: textOrEmpty(source.strengths),
+      weaknesses: textOrEmpty(source.weaknesses),
+      traits: textOrEmpty(source.traits),
       interests: textOrEmpty(source.interests),
       volunteer: textOrEmpty(source.volunteer),
       references: textOrEmpty(source.references)
@@ -1269,6 +1281,21 @@
         return `<span class="skill-tag">${escapeHtml(skill)}</span>`;
       })
       .join("");
+    const strengthsTags = parseCommaList(state.basics.strengths)
+      .map(function (item) {
+        return `<span class="skill-tag">${escapeHtml(item)}</span>`;
+      })
+      .join("");
+    const weaknessesTags = parseCommaList(state.basics.weaknesses)
+      .map(function (item) {
+        return `<span class="skill-tag">${escapeHtml(item)}</span>`;
+      })
+      .join("");
+    const traitsTags = parseCommaList(state.basics.traits)
+      .map(function (item) {
+        return `<span class="skill-tag">${escapeHtml(item)}</span>`;
+      })
+      .join("");
 
     const photoMarkup = visible.showPhoto && photoSource
       ? wrapLayoutElement(
@@ -1525,6 +1552,39 @@
     `
         )
       : "";
+    const strengthsSection = visible.showStrengths
+      ? wrapLayoutElement(
+          "strengths",
+          `
+      <section class="cv-section">
+        <h3>Stärken</h3>
+        ${strengthsTags ? `<div class="skill-list">${strengthsTags}</div>` : '<p class="muted-empty">Keine Stärken eingetragen.</p>'}
+      </section>
+    `
+        )
+      : "";
+    const weaknessesSection = visible.showWeaknesses
+      ? wrapLayoutElement(
+          "weaknesses",
+          `
+      <section class="cv-section">
+        <h3>Schwächen</h3>
+        ${weaknessesTags ? `<div class="skill-list">${weaknessesTags}</div>` : '<p class="muted-empty">Keine Schwächen eingetragen.</p>'}
+      </section>
+    `
+        )
+      : "";
+    const traitsSection = visible.showTraits
+      ? wrapLayoutElement(
+          "traits",
+          `
+      <section class="cv-section">
+        <h3>Soft Skills</h3>
+        ${traitsTags ? `<div class="skill-list">${traitsTags}</div>` : '<p class="muted-empty">Keine Soft Skills eingetragen.</p>'}
+      </section>
+    `
+        )
+      : "";
 
     const sidebarCustomSection = visible.showCustomSidebar && sidebarCustomFields.length
       ? wrapLayoutElement(
@@ -1571,6 +1631,9 @@
         ${skillsSection}
         ${languageSection}
         ${knowledgeSection}
+        ${strengthsSection}
+        ${weaknessesSection}
+        ${traitsSection}
         ${interestsSection}
         ${sidebarCustomSection}
       </aside>
@@ -1698,7 +1761,14 @@
       : "";
 
     const hasSidebarContent = Boolean(
-      skillsSection || languageSection || knowledgeSection || interestsSection || sidebarCustomSection
+      skillsSection ||
+        languageSection ||
+        knowledgeSection ||
+        strengthsSection ||
+        weaknessesSection ||
+        traitsSection ||
+        interestsSection ||
+        sidebarCustomSection
     );
     const hasMainContent = Boolean(
       profileSection ||
@@ -1722,6 +1792,9 @@
       skillsSection,
       languageSection,
       knowledgeSection,
+      strengthsSection,
+      weaknessesSection,
+      traitsSection,
       interestsSection,
       sidebarCustomSection,
       profileSection,
@@ -1783,6 +1856,9 @@
     state.basics.photoUrl = String(formData.get("photoUrl") || "");
     state.basics.summary = String(formData.get("summary") || "");
     state.basics.skills = String(formData.get("skills") || "");
+    state.basics.strengths = String(formData.get("strengths") || "");
+    state.basics.weaknesses = String(formData.get("weaknesses") || "");
+    state.basics.traits = String(formData.get("traits") || "");
     state.basics.interests = String(formData.get("interests") || "");
     state.basics.volunteer = String(formData.get("volunteer") || "");
     state.basics.references = String(formData.get("references") || "");
@@ -1831,6 +1907,9 @@
     form.elements.photoUrl.value = state.basics.photoUrl;
     form.elements.summary.value = state.basics.summary;
     form.elements.skills.value = state.basics.skills;
+    form.elements.strengths.value = state.basics.strengths;
+    form.elements.weaknesses.value = state.basics.weaknesses;
+    form.elements.traits.value = state.basics.traits;
     form.elements.interests.value = state.basics.interests;
     form.elements.volunteer.value = state.basics.volunteer;
     form.elements.references.value = state.basics.references;
@@ -1878,6 +1957,9 @@
       summary:
         "Kreative Produktdesignerin mit 6+ Jahren Erfahrung in der Entwicklung digitaler Produkte. Fokus auf nutzerzentrierte Oberflächen, klare Informationsarchitektur und saubere Zusammenarbeit mit Engineering-Teams.",
       skills: "Figma, UX Research, HTML/CSS, JavaScript, TypeScript, React, Kommunikation",
+      strengths: "Empathie, analytisches Denken, strukturierte Arbeitsweise",
+      weaknesses: "zu perfektionistisch, manchmal zu viele Aufgaben parallel",
+      traits: "teamfähig, sozial, schnelle Auffassungsgabe, zuverlässig",
       interests: "Reisen, Fotografie, Trailrunning",
       volunteer: "Mentorin bei Women in Tech Meetups (seit 2023)",
       references: "Auf Anfrage verfügbar"

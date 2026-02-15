@@ -164,6 +164,15 @@
         <div class="form-card">
           <h2>Weitere Bereiche</h2>
           <div class="field-grid">
+            <label>Stärken (optional, kommagetrennt)
+              <input id="strengths" name="strengths" type="text" placeholder="Analytisch, zuverlässig, strukturiert">
+            </label>
+            <label>Schwächen / Entwicklungsfelder (optional, kommagetrennt)
+              <input id="weaknesses" name="weaknesses" type="text" placeholder="Ungeduld, zu detailorientiert">
+            </label>
+            <label>Persönliche Eigenschaften / Soft Skills (optional, kommagetrennt)
+              <input id="traits" name="traits" type="text" placeholder="teamfähig, sozial, schnelle Auffassungsgabe">
+            </label>
             <label>Interessen / Hobbys (optional, kommagetrennt)
               <input id="interests" name="interests" type="text" placeholder="Lesen, Reisen, Sport">
             </label>
@@ -196,6 +205,9 @@
             <label class="toggle-row"><input type="checkbox" id="visShowSkills" name="visShowSkills" checked> Skills</label>
             <label class="toggle-row"><input type="checkbox" id="visShowLanguages" name="visShowLanguages" checked> Sprachen</label>
             <label class="toggle-row"><input type="checkbox" id="visShowKnowledge" name="visShowKnowledge" checked> Kenntnisse (Skala)</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowStrengths" name="visShowStrengths" checked> Stärken</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowWeaknesses" name="visShowWeaknesses"> Schwächen</label>
+            <label class="toggle-row"><input type="checkbox" id="visShowTraits" name="visShowTraits" checked> Soft Skills</label>
             <label class="toggle-row"><input type="checkbox" id="visShowCertifications" name="visShowCertifications"> Zertifizierungen</label>
             <label class="toggle-row"><input type="checkbox" id="visShowProjects" name="visShowProjects" checked> Projekte</label>
             <label class="toggle-row"><input type="checkbox" id="visShowInterests" name="visShowInterests" checked> Interessen</label>
@@ -282,6 +294,9 @@
                 <option value="skills">Skills</option>
                 <option value="languages">Sprachen</option>
                 <option value="knowledge">Kenntnisse</option>
+                <option value="strengths">Stärken</option>
+                <option value="weaknesses">Schwächen</option>
+                <option value="traits">Soft Skills</option>
                 <option value="certifications">Zertifizierungen</option>
                 <option value="education">Ausbildung</option>
                 <option value="interests">Interessen</option>

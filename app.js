@@ -2454,11 +2454,113 @@
     });
   }
 
-  async function buildPrintPayload(fileName) {
-    const html2canvas = window.html2canvas;
-    if (typeof html2canvas !== "function") {
+  let html2canvasLoadPromise = null;
+
+  function loadExternalScript(url, timeoutMs) {
+    return new Promise(function (resolve, reject) {
+      const existing = document.querySelector('script[src="' + url + '"]');
+      if (existing && existing.dataset.loaded === "true") {
+        resolve();
+        return;
+      }
+
+      const script = existing || document.createElement("script");
+      let finished = false;
+      const timerId = window.setTimeout(function () {
+        if (finished) {
+          return;
+        }
+        finished = true;
+        script.removeEventListener("load", onLoad);
+        script.removeEventListener("error", onError);
+        reject(new Error("script load timeout: " + url));
+      }, timeoutMs);
+
+      const onLoad = function () {
+        if (finished) {
+          return;
+        }
+        finished = true;
+        window.clearTimeout(timerId);
+        script.dataset.loaded = "true";
+        script.removeEventListener("load", onLoad);
+        script.removeEventListener("error", onError);
+        resolve();
+      };
+
+      const onError = function () {
+        if (finished) {
+          return;
+        }
+        finished = true;
+        window.clearTimeout(timerId);
+        script.removeEventListener("load", onLoad);
+        script.removeEventListener("error", onError);
+        reject(new Error("script load failed: " + url));
+      };
+
+      script.addEventListener("load", onLoad);
+      script.addEventListener("error", onError);
+
+      if (!existing) {
+        script.src = url;
+        script.async = true;
+        document.head.appendChild(script);
+      }
+    });
+  }
+
+  async function ensureHtml2Canvas() {
+    if (typeof window.html2canvas === "function") {
+      return window.html2canvas;
+    }
+    if (html2canvasLoadPromise) {
+      await html2canvasLoadPromise;
+      if (typeof window.html2canvas === "function") {
+        return window.html2canvas;
+      }
       throw new Error("html2canvas missing");
     }
+
+    const candidates = [
+      "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",
+      "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js",
+      "https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"
+    ];
+
+    html2canvasLoadPromise = (async function () {
+      let lastError = null;
+      for (let i = 0; i < candidates.length; i += 1) {
+        const url = candidates[i];
+        try {
+          await loadExternalScript(url, 12000);
+          if (typeof window.html2canvas === "function") {
+            return;
+          }
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      if (lastError) {
+        throw lastError;
+      }
+      throw new Error("html2canvas missing");
+    })();
+
+    try {
+      await html2canvasLoadPromise;
+    } finally {
+      html2canvasLoadPromise = null;
+    }
+
+    if (typeof window.html2canvas !== "function") {
+      throw new Error("html2canvas missing");
+    }
+    return window.html2canvas;
+  }
+
+  async function buildPrintPayload(fileName) {
+    const html2canvas = await ensureHtml2Canvas();
     const previewRect = previewPaper.getBoundingClientRect();
     const exportWidth = Math.max(320, Math.round(previewRect.width || 794));
     const exportMinHeight = Math.round((exportWidth * 297) / 210);

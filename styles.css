@@ -404,6 +404,13 @@ textarea {
   display: inline-block;
 }
 
+.cv-meta-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
 .cv-meta-phone {
   white-space: nowrap;
 }
@@ -593,12 +600,15 @@ textarea {
   align-items: center;
   gap: 4px;
   font-size: 12px;
+  max-width: 100%;
   padding: 3px 8px;
   border-radius: 8px;
   border: 1px solid var(--cv-primary-30w, #c2d6e8);
   text-decoration: none;
   color: var(--cv-primary, #1767a8);
   background: var(--cv-primary-9w, #eaf2f8);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .cv-entry-link:hover {

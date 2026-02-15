@@ -1248,13 +1248,18 @@
       contactSources.push({ value: state.basics.birthDate, className: "cv-meta-phone" });
     }
     if (visible.showWebsite) {
-      contactSources.push({ value: state.basics.website, className: "" });
+      contactSources.push({
+        value: state.basics.website,
+        className: "",
+        href: safeUrl(state.basics.website)
+      });
     }
     const metaItems = contactSources
       .map(function (item) {
         return {
           value: String(item.value || "").trim(),
-          className: String(item.className || "")
+          className: String(item.className || ""),
+          href: String(item.href || "")
         };
       })
       .filter(function (item) {
@@ -1262,6 +1267,9 @@
       })
       .map(function (item) {
         const className = item.className ? " cv-meta-item " + item.className : " cv-meta-item";
+        if (item.href) {
+          return `<a class="${className.trim()} cv-meta-link" href="${escapeHtml(item.href)}" target="_blank" rel="noreferrer">${escapeHtml(item.value)}</a>`;
+        }
         return `<span class="${className.trim()}">${escapeHtml(item.value)}</span>`;
       });
 
@@ -1382,12 +1390,14 @@
 
         const liveUrl = safeUrl(entry.projectUrl);
         const repoUrl = safeUrl(entry.repoUrl);
+        const liveLabel = String(entry.projectUrl || "").trim();
+        const repoLabel = String(entry.repoUrl || "").trim();
         const links = [
           liveUrl
-            ? `<a class="cv-entry-link" href="${escapeHtml(liveUrl)}" target="_blank" rel="noreferrer">Live</a>`
+            ? `<a class="cv-entry-link" href="${escapeHtml(liveUrl)}" target="_blank" rel="noreferrer">${escapeHtml(liveLabel || liveUrl)}</a>`
             : "",
           repoUrl
-            ? `<a class="cv-entry-link" href="${escapeHtml(repoUrl)}" target="_blank" rel="noreferrer">Repo</a>`
+            ? `<a class="cv-entry-link" href="${escapeHtml(repoUrl)}" target="_blank" rel="noreferrer">${escapeHtml(repoLabel || repoUrl)}</a>`
             : ""
         ]
           .filter(Boolean)
@@ -2571,7 +2581,7 @@
     exportStage.style.left = "-120000px";
     exportStage.style.top = "0";
     exportStage.style.width = exportWidth + "px";
-    exportStage.style.opacity = "0";
+    exportStage.style.opacity = "1";
     exportStage.style.pointerEvents = "none";
 
     const exportPaper = previewPaper.cloneNode(true);

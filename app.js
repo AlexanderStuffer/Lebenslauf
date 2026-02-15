@@ -35,6 +35,7 @@
       headerAlign: "left",
       photoShape: "circle",
       photoFrame: "clean",
+      photoSize: "104",
       photoZoom: "100",
       photoX: "50",
       photoY: "50",
@@ -672,8 +673,9 @@
       templateMode: sanitizeOption(textOrEmpty(source.templateMode) || "modern", ["modern", "classic", "minimal"], "modern"),
       fontMode: sanitizeOption(textOrEmpty(source.fontMode) || "plex", ["plex", "nunito", "playfair"], "plex"),
       headerAlign: sanitizeOption(textOrEmpty(source.headerAlign) || "left", ["left", "center", "right"], "left"),
-      photoShape: sanitizeOption(textOrEmpty(source.photoShape) || "circle", ["circle", "rounded", "square"], "circle"),
+      photoShape: sanitizeOption(textOrEmpty(source.photoShape) || "circle", ["circle", "rounded", "square", "rectangle"], "circle"),
       photoFrame: sanitizeOption(textOrEmpty(source.photoFrame) || "clean", ["clean", "double", "shadow", "polaroid", "none"], "clean"),
+      photoSize: String(Math.round(safeNumber(source.photoSize, 104, 80, 260))),
       photoZoom: String(Math.round(safeNumber(source.photoZoom, 100, 80, 180))),
       photoX: String(Math.round(safeNumber(source.photoX, 50, 0, 100))),
       photoY: String(Math.round(safeNumber(source.photoY, 50, 0, 100))),
@@ -1209,11 +1211,14 @@
     ensureElementLayouts();
     ensureVisibilitySettings();
     const visible = state.custom.visibleSections;
-    const shape = sanitizeOption(state.custom.photoShape, ["circle", "rounded", "square"], "circle");
+    const shape = sanitizeOption(state.custom.photoShape, ["circle", "rounded", "square", "rectangle"], "circle");
     const frame = sanitizeOption(state.custom.photoFrame, ["clean", "double", "shadow", "polaroid", "none"], "clean");
+    const photoSize = safeNumber(state.custom.photoSize, 104, 80, 260);
     const photoScale = safeNumber(state.custom.photoZoom, 100, 80, 180) / 100;
     const photoX = safeNumber(state.custom.photoX, 50, 0, 100);
     const photoY = safeNumber(state.custom.photoY, 50, 0, 100);
+    const photoWidth = shape === "rectangle" ? Math.round(photoSize * 1.35) : Math.round(photoSize);
+    const photoHeight = Math.round(photoSize);
     const photoSource = state.basics.photoDataUrl || state.basics.photoUrl;
 
     const headerCustomFields = state.customFields.filter(function (field) {
@@ -1502,6 +1507,8 @@
     previewPaper.style.setProperty("--cv-primary", state.custom.primaryColor);
     previewPaper.style.setProperty("--cv-bg", state.custom.backgroundColor);
     previewPaper.style.setProperty("--cv-text", state.custom.textColor);
+    previewPaper.style.setProperty("--photo-wrap-width", photoWidth + "px");
+    previewPaper.style.setProperty("--photo-wrap-height", photoHeight + "px");
     previewPaper.dataset.activeLayoutElement = selectedLayoutElementId();
 
     const primaryRgb = hexToRgb(state.custom.primaryColor) || { r: 23, g: 103, b: 168 };
@@ -1869,6 +1876,7 @@
     state.custom.headerAlign = String(formData.get("headerAlign") || "left");
     state.custom.photoShape = String(formData.get("photoShape") || "circle");
     state.custom.photoFrame = String(formData.get("photoFrame") || "clean");
+    state.custom.photoSize = String(formData.get("photoSize") || "104");
     state.custom.photoZoom = String(formData.get("photoZoom") || "100");
     state.custom.photoX = String(formData.get("photoX") || "50");
     state.custom.photoY = String(formData.get("photoY") || "50");
@@ -1920,6 +1928,7 @@
     form.elements.headerAlign.value = state.custom.headerAlign;
     form.elements.photoShape.value = state.custom.photoShape;
     form.elements.photoFrame.value = state.custom.photoFrame;
+    form.elements.photoSize.value = state.custom.photoSize;
     form.elements.photoZoom.value = state.custom.photoZoom;
     form.elements.photoX.value = state.custom.photoX;
     form.elements.photoY.value = state.custom.photoY;
@@ -2128,6 +2137,7 @@
       headerAlign: "left",
       photoShape: "circle",
       photoFrame: "double",
+      photoSize: "128",
       photoZoom: "100",
       photoX: "50",
       photoY: "50",
@@ -2373,14 +2383,108 @@
     );
   }
 
-  async function exportPdf(fileName) {
-    const html2pdf = window.html2pdf;
-    if (typeof html2pdf !== "function") {
-      throw new Error("html2pdf missing");
+  async function waitForStylesheets(doc) {
+    const links = Array.from(doc.querySelectorAll("link[rel='stylesheet']"));
+    if (!links.length) {
+      return;
+    }
+    await Promise.all(
+      links.map(function (link) {
+        if (link.sheet) {
+          return Promise.resolve();
+        }
+        return new Promise(function (resolve) {
+          const done = function () {
+            link.removeEventListener("load", done);
+            link.removeEventListener("error", done);
+            resolve();
+          };
+          link.addEventListener("load", done);
+          link.addEventListener("error", done);
+        });
+      })
+    );
+  }
+
+  function createIsolatedExportFrame() {
+    const frame = document.createElement("iframe");
+    frame.className = "pdf-export-frame";
+    frame.setAttribute("aria-hidden", "true");
+    document.body.appendChild(frame);
+
+    const frameDocument = frame.contentDocument;
+    if (!frameDocument) {
+      frame.remove();
+      throw new Error("export frame document missing");
     }
 
-    const exportStage = document.createElement("div");
-    exportStage.className = "pdf-export-stage";
+    const stylesheetMarkup = Array.from(document.querySelectorAll("link[rel='stylesheet']"))
+      .map(function (link) {
+        const href = link.href || link.getAttribute("href") || "";
+        return href ? `<link rel="stylesheet" href="${escapeHtml(href)}">` : "";
+      })
+      .join("");
+
+    frameDocument.open();
+    frameDocument.write(
+      `<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  ${stylesheetMarkup}
+  <style>html, body { margin: 0; padding: 0; background: #ffffff; }</style>
+</head>
+<body></body>
+</html>`
+    );
+    frameDocument.close();
+    return frame;
+  }
+
+  function saveCanvasAsPdf(canvas, fileName) {
+    const jspdf = window.jspdf;
+    if (!jspdf || typeof jspdf.jsPDF !== "function") {
+      throw new Error("jsPDF missing");
+    }
+
+    const pdf = new jspdf.jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imageWidth = pageWidth;
+    const imageHeight = (canvas.height * imageWidth) / canvas.width;
+    const imageData = canvas.toDataURL("image/jpeg", 0.98);
+
+    let renderedOffset = 0;
+    let pageIndex = 0;
+    while (renderedOffset < imageHeight - 0.5) {
+      if (pageIndex > 0) {
+        pdf.addPage();
+      }
+      pdf.addImage(imageData, "JPEG", 0, -renderedOffset, imageWidth, imageHeight, undefined, "FAST");
+      renderedOffset += pageHeight;
+      pageIndex += 1;
+    }
+
+    pdf.save(fileName);
+  }
+
+  async function exportPdf(fileName) {
+    const html2canvas = window.html2canvas;
+    const html2pdf = window.html2pdf;
+    const canRenderCanvas = typeof html2canvas === "function" && window.jspdf && typeof window.jspdf.jsPDF === "function";
+    if (!canRenderCanvas && typeof html2pdf !== "function") {
+      throw new Error("pdf libraries missing");
+    }
+
+    const exportFrame = createIsolatedExportFrame();
+    const exportWindow = exportFrame.contentWindow || window;
+    const exportDocument = exportFrame.contentDocument;
+    if (!exportDocument) {
+      exportFrame.remove();
+      throw new Error("export frame unavailable");
+    }
+
     const exportPaper = previewPaper.cloneNode(true);
     exportPaper.classList.remove("layout-edit-mode");
     exportPaper.classList.add("pdf-export-mode");
@@ -2390,33 +2494,45 @@
     exportPaper.querySelectorAll(".is-active-layout-element").forEach(function (element) {
       element.classList.remove("is-active-layout-element");
     });
-    exportStage.appendChild(exportPaper);
-    document.body.appendChild(exportStage);
+    exportDocument.body.appendChild(exportPaper);
 
     try {
-      if (document.fonts && document.fonts.ready) {
+      await waitForStylesheets(exportDocument);
+      if (exportDocument.fonts && exportDocument.fonts.ready) {
         try {
-          await document.fonts.ready;
+          await exportDocument.fonts.ready;
         } catch (fontError) {
           console.warn("Fonts not ready for export", fontError);
         }
       }
       await waitForImages(exportPaper);
       await new Promise(function (resolve) {
-        window.requestAnimationFrame(function () {
-          window.requestAnimationFrame(resolve);
+        const raf = exportWindow.requestAnimationFrame
+          ? exportWindow.requestAnimationFrame.bind(exportWindow)
+          : window.requestAnimationFrame.bind(window);
+        raf(function () {
+          raf(resolve);
         });
       });
+
+      if (canRenderCanvas) {
+        const canvas = await html2canvas(exportPaper, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          windowWidth: 794,
+          scrollX: 0,
+          scrollY: 0
+        });
+        saveCanvasAsPdf(canvas, fileName);
+        return;
+      }
 
       await html2pdf()
         .set({
           margin: 0,
           filename: fileName,
           image: { type: "jpeg", quality: 0.98 },
-          pagebreak: {
-            mode: ["css", "legacy"],
-            avoid: [".cv-layout-element", ".cv-entry", ".cv-section", ".cv-custom-item", ".knowledge-row", "img"]
-          },
           html2canvas: {
             scale: 2,
             useCORS: true,
@@ -2430,7 +2546,7 @@
         .from(exportPaper)
         .save();
     } finally {
-      exportStage.remove();
+      exportFrame.remove();
     }
   }
 

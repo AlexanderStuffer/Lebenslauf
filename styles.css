@@ -284,6 +284,17 @@ textarea {
   pointer-events: none;
 }
 
+.pdf-export-frame {
+  position: fixed;
+  left: -120000px;
+  top: 0;
+  width: 794px;
+  height: 1123px;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .pdf-export-stage .cv-paper {
   margin: 0;
   border-radius: 0;
@@ -318,7 +329,7 @@ textarea {
 .cv-header {
   padding: 36px;
   display: grid;
-  grid-template-columns: 104px 1fr;
+  grid-template-columns: var(--photo-wrap-width, 104px) 1fr;
   gap: 20px;
   align-items: center;
   background:
@@ -333,12 +344,12 @@ textarea {
 
 .cv-header.header-align-right {
   text-align: right;
-  grid-template-columns: 1fr 104px;
+  grid-template-columns: 1fr var(--photo-wrap-width, 104px);
 }
 
 .cv-photo-wrap {
-  width: 104px;
-  height: 104px;
+  width: var(--photo-wrap-width, 104px);
+  height: var(--photo-wrap-height, 104px);
   border: 4px solid rgba(255, 255, 255, 0.45);
   overflow: hidden;
   background: rgba(255, 255, 255, 0.26);
@@ -354,6 +365,10 @@ textarea {
 
 .cv-photo-wrap.shape-square {
   border-radius: 0;
+}
+
+.cv-photo-wrap.shape-rectangle {
+  border-radius: 14px;
 }
 
 .cv-photo-wrap img {

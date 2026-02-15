@@ -191,13 +191,6 @@
     return state.custom.elementLayouts[safeId];
   }
 
-  function getElementLayoutLabel(id) {
-    const found = layoutElementDefs.find(function (item) {
-      return item.id === id;
-    });
-    return found ? found.label : id;
-  }
-
   function resetElementLayout(id) {
     const safeId = sanitizeOption(String(id || ""), layoutElementIds, "profile");
     ensureElementLayouts();

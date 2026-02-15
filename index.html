@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lebenslauf-Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Lebenslauf-Builder</h1>
+      <p>Daten eintragen, live ansehen, als PDF herunterladen.</p>
+    </div>
+    <button id="downloadPdfBtn" class="download-btn" type="button">Als PDF herunterladen</button>
+  </header>
+
+  <main class="app-grid">
+    <section class="panel editor" aria-label="Bearbeitungsbereich">
+      <form id="cvForm" autocomplete="on">
+        <div class="form-card">
+          <h2>Persoenliche Daten</h2>
+          <div class="field-grid">
+            <label>Vollstaendiger Name
+              <input id="fullName" name="fullName" type="text" placeholder="Max Mustermann">
+            </label>
+            <label>Berufsbezeichnung
+              <input id="headline" name="headline" type="text" placeholder="Frontend Entwickler">
+            </label>
+            <label>E-Mail
+              <input id="email" name="email" type="email" placeholder="max@beispiel.de">
+            </label>
+            <label>Telefon
+              <input id="phone" name="phone" type="text" placeholder="+49 151 12345678">
+            </label>
+            <label>Ort
+              <input id="location" name="location" type="text" placeholder="Berlin, Deutschland">
+            </label>
+            <label>Website / LinkedIn
+              <input id="website" name="website" type="text" placeholder="linkedin.com/in/max">
+            </label>
+            <label>Foto-URL (optional)
+              <input id="photoUrl" name="photoUrl" type="url" placeholder="https://...">
+            </label>
+            <label>Profilbild Datei (optional)
+              <input id="photoFile" name="photoFile" type="file" accept="image/*">
+            </label>
+          </div>
+          <div class="inline-actions">
+            <button id="clearPhotoBtn" type="button" class="secondary-btn">Upload-Bild entfernen</button>
+            <span class="field-help">Wenn ein Bild hochgeladen wurde, wird es statt der URL verwendet.</span>
+          </div>
+            <label>Profiltext
+            <textarea id="summary" name="summary" rows="4" placeholder="Kurze Zusammenfassung ueber dich, deine Schwerpunkte und Ziele."></textarea>
+          </label>
+          <label>Skills (kommagetrennt)
+            <input id="skills" name="skills" type="text" placeholder="JavaScript, React, TypeScript, Kommunikation">
+          </label>
+        </div>
+
+        <div class="form-card">
+          <h2>Bilder: Rahmen & Zuschnitt</h2>
+          <div class="field-grid">
+            <label>Profilbild Rahmen
+              <select id="photoFrame" name="photoFrame">
+                <option value="clean">Clean</option>
+                <option value="double">Double Border</option>
+                <option value="shadow">Shadow</option>
+                <option value="polaroid">Polaroid</option>
+                <option value="none">Kein Rahmen</option>
+              </select>
+            </label>
+            <label>Profilbild Zoom
+              <input id="photoZoom" name="photoZoom" type="range" min="80" max="180" step="5" value="100">
+            </label>
+            <label>Profilbild Position X
+              <input id="photoX" name="photoX" type="range" min="0" max="100" step="1" value="50">
+            </label>
+            <label>Profilbild Position Y
+              <input id="photoY" name="photoY" type="range" min="0" max="100" step="1" value="50">
+            </label>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <div class="section-title-row">
+          <h2>Berufserfahrung</h2>
+            <button id="addExperienceBtn" type="button" class="secondary-btn">+ Eintrag</button>
+          </div>
+          <div id="experienceList" class="entry-list"></div>
+        </div>
+
+        <div class="form-card">
+          <div class="section-title-row">
+          <h2>Ausbildung</h2>
+            <button id="addEducationBtn" type="button" class="secondary-btn">+ Eintrag</button>
+          </div>
+          <div id="educationList" class="entry-list"></div>
+        </div>
+
+        <div class="form-card">
+          <div class="section-title-row">
+            <h2>Projekte</h2>
+            <button id="addProjectBtn" type="button" class="secondary-btn">+ Projekt</button>
+          </div>
+          <div id="projectList" class="entry-list"></div>
+        </div>
+
+        <div class="form-card">
+          <div class="section-title-row">
+            <h2>Benutzerdefinierte Felder</h2>
+            <button id="addCustomFieldBtn" type="button" class="secondary-btn">+ Feld</button>
+          </div>
+          <p class="field-help">Hier kannst du eigene Felder anlegen und selbst bestimmen, wo sie angezeigt werden.</p>
+          <div id="customFieldList" class="entry-list"></div>
+        </div>
+
+        <div class="form-card">
+          <h2>Design & Layout</h2>
+          <div class="field-grid">
+            <label>Layout
+              <select id="layoutMode" name="layoutMode">
+                <option value="sidebar">Sidebar links</option>
+                <option value="top">Header oben (einspaltig)</option>
+              </select>
+            </label>
+            <label>Vorlage
+              <select id="templateMode" name="templateMode">
+                <option value="modern">Modern</option>
+                <option value="classic">Klassisch</option>
+                <option value="minimal">Minimal</option>
+              </select>
+            </label>
+            <label>Schrift
+              <select id="fontMode" name="fontMode">
+                <option value="plex">IBM Plex Sans</option>
+                <option value="nunito">Nunito</option>
+                <option value="playfair">Playfair Display + Sans</option>
+              </select>
+            </label>
+            <label>Header-Ausrichtung
+              <select id="headerAlign" name="headerAlign">
+                <option value="left">Links</option>
+                <option value="center">Zentriert</option>
+                <option value="right">Rechts</option>
+              </select>
+            </label>
+            <label>Profilbild-Form
+              <select id="photoShape" name="photoShape">
+                <option value="circle">Kreis</option>
+                <option value="rounded">Abgerundet</option>
+                <option value="square">Quadratisch</option>
+              </select>
+            </label>
+            <label>Sektionsstil
+              <select id="sectionStyle" name="sectionStyle">
+                <option value="line">Linie</option>
+                <option value="cards">Karten</option>
+                <option value="badges">Labels</option>
+              </select>
+            </label>
+            <label>Primaerfarbe
+              <input id="primaryColor" name="primaryColor" type="color" value="#1767a8">
+            </label>
+            <label>Hintergrund
+              <input id="backgroundColor" name="backgroundColor" type="color" value="#ffffff">
+            </label>
+            <label>Textfarbe
+              <input id="textColor" name="textColor" type="color" value="#1a202c">
+            </label>
+            <label>Abstand / Dichte
+              <input id="density" name="density" type="range" min="0" max="2" step="1" value="1">
+            </label>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h2>Elemente frei anpassen</h2>
+          <p class="field-help">Pro Element kannst du Position, Breite, Schriftgroesse und Zeilenhoehe steuern. Optional kannst du Elemente direkt in der Vorschau ziehen.</p>
+          <div class="field-grid">
+            <label>Element
+              <select id="layoutElement" name="layoutElement">
+                <option value="headerPhoto">Header: Profilbild</option>
+                <option value="name">Header: Name</option>
+                <option value="headline">Header: Berufsbezeichnung</option>
+                <option value="contact">Header: Kontaktzeile</option>
+                <option value="profile">Profilbereich</option>
+                <option value="experience">Berufserfahrung</option>
+                <option value="projects">Projekte</option>
+                <option value="skills">Skills</option>
+                <option value="education">Ausbildung</option>
+                <option value="customSidebar">Eigene Felder (Sidebar)</option>
+                <option value="customContent">Eigene Felder (Hauptbereich)</option>
+              </select>
+            </label>
+            <label>Horizontal (X)
+              <input id="elementOffsetX" name="elementOffsetX" type="range" min="-220" max="220" step="1" value="0">
+              <span id="elementOffsetXValue" class="field-help">0 px</span>
+            </label>
+            <label>Vertikal (Y)
+              <input id="elementOffsetY" name="elementOffsetY" type="range" min="-220" max="220" step="1" value="0">
+              <span id="elementOffsetYValue" class="field-help">0 px</span>
+            </label>
+            <label>Breite
+              <input id="elementWidth" name="elementWidth" type="range" min="45" max="120" step="1" value="100">
+              <span id="elementWidthValue" class="field-help">100 %</span>
+            </label>
+            <label>Schriftgroesse
+              <input id="elementFontSize" name="elementFontSize" type="range" min="70" max="150" step="1" value="100">
+              <span id="elementFontSizeValue" class="field-help">100 %</span>
+            </label>
+            <label>Zeilenhoehe
+              <input id="elementLineHeight" name="elementLineHeight" type="range" min="90" max="220" step="1" value="140">
+              <span id="elementLineHeightValue" class="field-help">1.40</span>
+            </label>
+          </div>
+          <label class="toggle-row">
+            <input id="elementDragEnabled" name="elementDragEnabled" type="checkbox">
+            Drag-and-drop in der Vorschau aktivieren
+          </label>
+          <div class="inline-actions">
+            <button id="resetElementLayoutBtn" type="button" class="secondary-btn">Aktuelles Element zuruecksetzen</button>
+            <button id="resetAllElementLayoutsBtn" type="button" class="secondary-btn">Alle Elemente zuruecksetzen</button>
+            <span class="field-help">Tipp: Im Drag-Modus in der Vorschau auf ein Element klicken und ziehen.</span>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel preview" aria-label="Live Vorschau">
+      <div class="preview-toolbar">
+        <span>Live-Vorschau</span>
+        <button id="resetDemoBtn" type="button" class="secondary-btn">Demo-Daten laden</button>
+      </div>
+      <div id="paperWrap" class="paper-wrap">
+        <article id="previewPaper" class="cv-paper"></article>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -32,7 +32,31 @@
       justify-content: center;
     }
 
+    .print-root .cv-paper {
+      width: 210mm !important;
+      min-height: 297mm !important;
+    }
+
+    /* Erzwingt die gleiche Zweispalten-Struktur wie in der Live-Vorschau. */
+    .print-root .cv-paper.layout-sidebar .cv-main {
+      grid-template-columns: 34% 66% !important;
+    }
+
+    .print-root .cv-paper.layout-top .cv-main {
+      grid-template-columns: 1fr !important;
+    }
+
+    .print-root .cv-paper.layout-sidebar .cv-sidebar {
+      border-right: 1px solid var(--cv-primary-20w, #d8e6f2) !important;
+      border-bottom: 0 !important;
+    }
+
     @media print {
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
       body {
         background: #ffffff;
       }
@@ -43,21 +67,11 @@
 
       .print-root {
         padding: 0;
+        display: block;
       }
 
       .cv-paper {
-        margin: 0 auto !important;
-        box-shadow: none !important;
-        border-radius: 0 !important;
-        overflow: visible !important;
-      }
-
-      .cv-wrapper {
-        min-height: auto !important;
-      }
-
-      .template-modern .cv-header {
-        clip-path: none !important;
+        margin: 0 !important;
       }
     }
   </style>

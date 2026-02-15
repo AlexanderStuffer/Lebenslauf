@@ -2367,7 +2367,6 @@
     exportPaper.querySelectorAll(".is-active-layout-element").forEach(function (element) {
       element.classList.remove("is-active-layout-element");
     });
-    exportPaper.classList.add("pdf-export-mode");
     exportPaper.style.width = "210mm";
     exportPaper.style.minHeight = "297mm";
     return {
@@ -2411,7 +2410,7 @@
       };
 
       window.addEventListener("message", onMessage);
-      printWindow = window.open("print.html", "_blank");
+      printWindow = window.open("print.html", "_blank", "width=1200,height=900");
       if (!printWindow) {
         cleanup();
         reject(new Error("print window blocked"));

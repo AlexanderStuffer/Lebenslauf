@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PDF Vorschau</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #eff3f8;
+      color: #1f2a37;
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+    }
+
+    .print-status {
+      margin: 0;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      color: #44536a;
+      border-bottom: 1px solid #d3dce8;
+      background: #f8fbff;
+    }
+
+    .print-root {
+      padding: 14px;
+      display: flex;
+      justify-content: center;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      .print-status {
+        display: none;
+      }
+
+      .print-root {
+        padding: 0;
+      }
+
+      .cv-paper {
+        margin: 0 auto !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+      }
+
+      .cv-wrapper {
+        min-height: auto !important;
+      }
+
+      .template-modern .cv-header {
+        clip-path: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <p id="printStatus" class="print-status">Vorschau wird empfangen...</p>
+  <div id="printRoot" class="print-root"></div>
+
+  <script>
+    (function () {
+      const statusEl = document.getElementById("printStatus");
+      const root = document.getElementById("printRoot");
+      let received = false;
+
+      function setStatus(text) {
+        if (statusEl) {
+          statusEl.textContent = text;
+        }
+      }
+
+      function waitForImages(container) {
+        const images = Array.from(container.querySelectorAll("img"));
+        if (!images.length) {
+          return Promise.resolve();
+        }
+        return Promise.all(
+          images.map(function (img) {
+            if (img.complete && img.naturalWidth > 0) {
+              return Promise.resolve();
+            }
+            return new Promise(function (resolve) {
+              const done = function () {
+                img.removeEventListener("load", done);
+                img.removeEventListener("error", done);
+                resolve();
+              };
+              img.addEventListener("load", done);
+              img.addEventListener("error", done);
+            });
+          })
+        ).then(function () {
+          return undefined;
+        });
+      }
+
+      function renderAndPrint(payload) {
+        if (received) {
+          return;
+        }
+        received = true;
+
+        if (!payload || typeof payload.paperHtml !== "string") {
+          setStatus("Keine gültigen Druckdaten empfangen.");
+          return;
+        }
+
+        root.innerHTML = payload.paperHtml;
+        const paper = root.querySelector(".cv-paper");
+        if (!paper) {
+          setStatus("Vorschau konnte nicht aufgebaut werden.");
+          return;
+        }
+
+        const fileName = String(payload.fileName || "lebenslauf.pdf").trim();
+        if (fileName) {
+          document.title = fileName;
+        }
+
+        setStatus("Vorschau wird vorbereitet...");
+        const fontPromise = document.fonts && document.fonts.ready
+          ? document.fonts.ready.catch(function () {
+              return undefined;
+            })
+          : Promise.resolve();
+
+        Promise.all([fontPromise, waitForImages(root)])
+          .then(function () {
+            return new Promise(function (resolve) {
+              requestAnimationFrame(function () {
+                requestAnimationFrame(resolve);
+              });
+            });
+          })
+          .then(function () {
+            setStatus("Druckdialog wird geöffnet...");
+            window.setTimeout(function () {
+              window.print();
+            }, 60);
+          })
+          .catch(function () {
+            setStatus("Druckdialog konnte nicht vorbereitet werden.");
+          });
+      }
+
+      window.addEventListener("message", function (event) {
+        const data = event.data;
+        if (!data || typeof data !== "object") {
+          return;
+        }
+        if (data.type !== "cv-print-payload") {
+          return;
+        }
+        if (window.opener && !window.opener.closed) {
+          window.opener.postMessage({ type: "cv-print-received" }, "*");
+        }
+        renderAndPrint(data.payload);
+      });
+
+      window.addEventListener("afterprint", function () {
+        setStatus("Druckdialog geschlossen. Du kannst dieses Fenster schließen.");
+      });
+
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: "cv-print-ready" }, "*");
+      } else {
+        setStatus("Dieses Fenster wurde ohne Druckdaten geöffnet.");
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -2360,194 +2360,68 @@
     renderPreview();
   }
 
-  async function waitForImages(container) {
-    const images = Array.from(container.querySelectorAll("img"));
-    if (!images.length) {
-      return;
-    }
-    await Promise.all(
-      images.map(function (img) {
-        if (img.complete && img.naturalWidth > 0) {
-          return Promise.resolve();
-        }
-        return new Promise(function (resolve) {
-          const done = function () {
-            img.removeEventListener("load", done);
-            img.removeEventListener("error", done);
-            resolve();
-          };
-          img.addEventListener("load", done);
-          img.addEventListener("error", done);
-        });
-      })
-    );
-  }
-
-  async function waitForStylesheets(doc) {
-    const links = Array.from(doc.querySelectorAll("link[rel='stylesheet']"));
-    if (!links.length) {
-      return;
-    }
-    await Promise.all(
-      links.map(function (link) {
-        if (link.sheet) {
-          return Promise.resolve();
-        }
-        return new Promise(function (resolve) {
-          const done = function () {
-            link.removeEventListener("load", done);
-            link.removeEventListener("error", done);
-            resolve();
-          };
-          link.addEventListener("load", done);
-          link.addEventListener("error", done);
-        });
-      })
-    );
-  }
-
-  function createIsolatedExportFrame() {
-    const frame = document.createElement("iframe");
-    frame.className = "pdf-export-frame";
-    frame.setAttribute("aria-hidden", "true");
-    document.body.appendChild(frame);
-
-    const frameDocument = frame.contentDocument;
-    if (!frameDocument) {
-      frame.remove();
-      throw new Error("export frame document missing");
-    }
-
-    const stylesheetMarkup = Array.from(document.querySelectorAll("link[rel='stylesheet']"))
-      .map(function (link) {
-        const href = link.href || link.getAttribute("href") || "";
-        return href ? `<link rel="stylesheet" href="${escapeHtml(href)}">` : "";
-      })
-      .join("");
-
-    frameDocument.open();
-    frameDocument.write(
-      `<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  ${stylesheetMarkup}
-  <style>html, body { margin: 0; padding: 0; background: #ffffff; }</style>
-</head>
-<body></body>
-</html>`
-    );
-    frameDocument.close();
-    return frame;
-  }
-
-  function saveCanvasAsPdf(canvas, fileName) {
-    const jspdf = window.jspdf;
-    if (!jspdf || typeof jspdf.jsPDF !== "function") {
-      throw new Error("jsPDF missing");
-    }
-
-    const pdf = new jspdf.jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const imageWidth = pageWidth;
-    const imageHeight = (canvas.height * imageWidth) / canvas.width;
-    const imageData = canvas.toDataURL("image/jpeg", 0.98);
-
-    let renderedOffset = 0;
-    let pageIndex = 0;
-    while (renderedOffset < imageHeight - 0.5) {
-      if (pageIndex > 0) {
-        pdf.addPage();
-      }
-      pdf.addImage(imageData, "JPEG", 0, -renderedOffset, imageWidth, imageHeight, undefined, "FAST");
-      renderedOffset += pageHeight;
-      pageIndex += 1;
-    }
-
-    pdf.save(fileName);
-  }
-
-  async function exportPdf(fileName) {
-    const html2canvas = window.html2canvas;
-    const html2pdf = window.html2pdf;
-    const canRenderCanvas = typeof html2canvas === "function" && window.jspdf && typeof window.jspdf.jsPDF === "function";
-    if (!canRenderCanvas && typeof html2pdf !== "function") {
-      throw new Error("pdf libraries missing");
-    }
-
-    const exportFrame = createIsolatedExportFrame();
-    const exportWindow = exportFrame.contentWindow || window;
-    const exportDocument = exportFrame.contentDocument;
-    if (!exportDocument) {
-      exportFrame.remove();
-      throw new Error("export frame unavailable");
-    }
-
+  function buildPrintPayload(fileName) {
     const exportPaper = previewPaper.cloneNode(true);
-    exportPaper.classList.remove("layout-edit-mode");
-    exportPaper.classList.add("pdf-export-mode");
-    exportPaper.style.width = "210mm";
-    exportPaper.style.minHeight = "297mm";
+    exportPaper.classList.remove("layout-edit-mode", "is-layout-dragging");
     exportPaper.removeAttribute("data-active-layout-element");
     exportPaper.querySelectorAll(".is-active-layout-element").forEach(function (element) {
       element.classList.remove("is-active-layout-element");
     });
-    exportDocument.body.appendChild(exportPaper);
-
-    try {
-      await waitForStylesheets(exportDocument);
-      if (exportDocument.fonts && exportDocument.fonts.ready) {
-        try {
-          await exportDocument.fonts.ready;
-        } catch (fontError) {
-          console.warn("Fonts not ready for export", fontError);
-        }
+    exportPaper.classList.add("pdf-export-mode");
+    exportPaper.style.width = "210mm";
+    exportPaper.style.minHeight = "297mm";
+    return {
+      type: "cv-print-payload",
+      payload: {
+        fileName: fileName,
+        paperHtml: exportPaper.outerHTML
       }
-      await waitForImages(exportPaper);
-      await new Promise(function (resolve) {
-        const raf = exportWindow.requestAnimationFrame
-          ? exportWindow.requestAnimationFrame.bind(exportWindow)
-          : window.requestAnimationFrame.bind(window);
-        raf(function () {
-          raf(resolve);
-        });
-      });
+    };
+  }
 
-      if (canRenderCanvas) {
-        const canvas = await html2canvas(exportPaper, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          windowWidth: 794,
-          scrollX: 0,
-          scrollY: 0
-        });
-        saveCanvasAsPdf(canvas, fileName);
+  async function exportPdf(fileName) {
+    const message = buildPrintPayload(fileName);
+    await new Promise(function (resolve, reject) {
+      let timerId = null;
+      let printWindow = null;
+
+      const cleanup = function () {
+        if (timerId !== null) {
+          window.clearTimeout(timerId);
+        }
+        window.removeEventListener("message", onMessage);
+      };
+
+      const onMessage = function (event) {
+        if (event.source !== printWindow) {
+          return;
+        }
+        const data = event.data;
+        if (!data || typeof data !== "object") {
+          return;
+        }
+        if (data.type === "cv-print-ready") {
+          printWindow.postMessage(message, "*");
+          return;
+        }
+        if (data.type === "cv-print-received") {
+          cleanup();
+          resolve();
+        }
+      };
+
+      window.addEventListener("message", onMessage);
+      printWindow = window.open("print.html", "_blank");
+      if (!printWindow) {
+        cleanup();
+        reject(new Error("print window blocked"));
         return;
       }
-
-      await html2pdf()
-        .set({
-          margin: 0,
-          filename: fileName,
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: "#ffffff",
-            windowWidth: 794,
-            scrollX: 0,
-            scrollY: 0
-          },
-          jsPDF: { unit: "pt", format: "a4", orientation: "portrait" }
-        })
-        .from(exportPaper)
-        .save();
-    } finally {
-      exportFrame.remove();
-    }
+      timerId = window.setTimeout(function () {
+        cleanup();
+        reject(new Error("print window timeout"));
+      }, 12000);
+    });
   }
 
   let activeDragState = null;
@@ -2747,7 +2621,7 @@
     } catch (error) {
       console.error(error);
       window.alert(
-        "Beim PDF-Export ist ein Fehler aufgetreten. Falls externe Bilder genutzt werden, prüfe CORS oder nutze Upload-Bilder."
+        "Das PDF-Fenster konnte nicht geöffnet oder vorbereitet werden. Bitte Pop-ups erlauben und erneut versuchen."
       );
     } finally {
       downloadPdfBtn.disabled = false;

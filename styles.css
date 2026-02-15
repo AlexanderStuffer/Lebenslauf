@@ -275,32 +275,6 @@ textarea {
   font-family: var(--cv-font, "IBM Plex Sans", sans-serif);
 }
 
-.pdf-export-stage {
-  position: fixed;
-  left: -120000px;
-  top: 0;
-  width: 794px;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.pdf-export-frame {
-  position: fixed;
-  left: -120000px;
-  top: 0;
-  width: 794px;
-  height: 1123px;
-  border: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.pdf-export-stage .cv-paper {
-  margin: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-
 .pdf-export-mode .cv-layout-element {
   outline: none !important;
   background: transparent !important;

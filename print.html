@@ -32,25 +32,6 @@
       justify-content: center;
     }
 
-    .print-root .cv-paper {
-      width: 210mm !important;
-      min-height: 297mm !important;
-    }
-
-    /* Erzwingt die gleiche Zweispalten-Struktur wie in der Live-Vorschau. */
-    .print-root .cv-paper.layout-sidebar .cv-main {
-      grid-template-columns: 34% 66% !important;
-    }
-
-    .print-root .cv-paper.layout-top .cv-main {
-      grid-template-columns: 1fr !important;
-    }
-
-    .print-root .cv-paper.layout-sidebar .cv-sidebar {
-      border-right: 1px solid var(--cv-primary-20w, #d8e6f2) !important;
-      border-bottom: 0 !important;
-    }
-
     @media print {
       @page {
         size: A4;
@@ -69,10 +50,6 @@
         padding: 0;
         display: block;
       }
-
-      .cv-paper {
-        margin: 0 !important;
-      }
     }
   </style>
 </head>
@@ -90,6 +67,20 @@
         if (statusEl) {
           statusEl.textContent = text;
         }
+      }
+
+      function applyInlineCss(cssText) {
+        const existing = document.getElementById("printInlineCss");
+        if (existing) {
+          existing.remove();
+        }
+        if (!cssText || typeof cssText !== "string") {
+          return;
+        }
+        const style = document.createElement("style");
+        style.id = "printInlineCss";
+        style.textContent = cssText;
+        document.head.appendChild(style);
       }
 
       function waitForImages(container) {
@@ -128,6 +119,7 @@
           return;
         }
 
+        applyInlineCss(payload.cssText);
         root.innerHTML = payload.paperHtml;
         const paper = root.querySelector(".cv-paper");
         if (!paper) {

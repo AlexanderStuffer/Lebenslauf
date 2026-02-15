@@ -2360,6 +2360,27 @@
     renderPreview();
   }
 
+  function collectCurrentStyleText() {
+    return Array.from(document.styleSheets)
+      .map(function (sheet) {
+        try {
+          const rules = sheet.cssRules;
+          if (!rules) {
+            return "";
+          }
+          return Array.from(rules)
+            .map(function (rule) {
+              return rule.cssText;
+            })
+            .join("\n");
+        } catch (error) {
+          return "";
+        }
+      })
+      .filter(Boolean)
+      .join("\n");
+  }
+
   function buildPrintPayload(fileName) {
     const exportPaper = previewPaper.cloneNode(true);
     exportPaper.classList.remove("layout-edit-mode", "is-layout-dragging");
@@ -2373,7 +2394,8 @@
       type: "cv-print-payload",
       payload: {
         fileName: fileName,
-        paperHtml: exportPaper.outerHTML
+        paperHtml: exportPaper.outerHTML,
+        cssText: collectCurrentStyleText()
       }
     };
   }

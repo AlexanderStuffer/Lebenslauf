@@ -111,6 +111,14 @@ label {
   color: #334155;
 }
 
+.drivers-license-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.84rem;
+  color: #334155;
+}
+
 .field-help {
   display: block;
   font-size: 0.78rem;

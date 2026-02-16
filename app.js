@@ -382,6 +382,20 @@
     });
   }
 
+  function setCheckboxGroupValues(groupName, values) {
+    const selectedValues = new Set(
+      (Array.isArray(values) ? values : [])
+        .map(function (item) {
+          return String(item || "").trim();
+        })
+        .filter(Boolean)
+    );
+    const selector = 'input[type="checkbox"][name="' + String(groupName || "") + '"]';
+    Array.from(form.querySelectorAll(selector)).forEach(function (input) {
+      input.checked = selectedValues.has(input.value);
+    });
+  }
+
   function formatPeriod(start, end) {
     const s = String(start || "").trim();
     const e = String(end || "").trim();
@@ -1992,7 +2006,7 @@
     form.elements.address.value = state.basics.address;
     form.elements.birthDate.value = state.basics.birthDate;
     form.elements.website.value = state.basics.website;
-    setMultiSelectValues(form.elements.driversLicenseClasses, parseCommaList(state.basics.drivingLicenseClasses));
+    setCheckboxGroupValues("driversLicenseClasses", parseCommaList(state.basics.drivingLicenseClasses));
     form.elements.driversLicenseCustom.value = state.basics.drivingLicenseCustom;
     form.elements.driversLicensePlacement.value = sanitizeOption(
       state.basics.drivingLicensePlacement,

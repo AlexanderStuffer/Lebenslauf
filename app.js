@@ -2578,10 +2578,12 @@
 
     const exportStage = document.createElement("div");
     exportStage.style.position = "fixed";
-    exportStage.style.left = "-120000px";
+    exportStage.style.left = "0";
     exportStage.style.top = "0";
     exportStage.style.width = exportWidth + "px";
-    exportStage.style.opacity = "1";
+    exportStage.style.height = Math.max(exportMinHeight, Math.round(previewPaper.scrollHeight || exportMinHeight)) + "px";
+    exportStage.style.overflow = "visible";
+    exportStage.style.zIndex = "-1";
     exportStage.style.pointerEvents = "none";
 
     const exportPaper = previewPaper.cloneNode(true);
@@ -2665,110 +2667,97 @@
     }
   }
 
-  function openPrintWindow() {
-    return window.open("print.html", "_blank", "width=1200,height=900");
-  }
+  let jsPdfLoadPromise = null;
 
-  async function exportPdf(fileName, existingPrintWindow) {
-    const payload = await buildPrintPayload(fileName);
-    await sendPrintPayload(payload, existingPrintWindow);
-  }
-
-  async function sendPrintPayload(payloadMessage, existingPrintWindow) {
-    await new Promise(function (resolve, reject) {
-      let timerId = null;
-      let resendTimerId = null;
-      let closedTimerId = null;
-      const printWindow = existingPrintWindow || openPrintWindow();
-
-      const cleanup = function () {
-        if (timerId !== null) {
-          window.clearTimeout(timerId);
-        }
-        if (resendTimerId !== null) {
-          window.clearInterval(resendTimerId);
-        }
-        if (closedTimerId !== null) {
-          window.clearInterval(closedTimerId);
-        }
-        window.removeEventListener("message", onMessage);
-      };
-
-      let delivered = false;
-      let directDeliveryAllowed = true;
-
-      const tryDeliver = function () {
-        if (!printWindow || printWindow.closed) {
-          return;
-        }
-        if (directDeliveryAllowed) {
-          try {
-            if (typeof printWindow.receiveCvPayload === "function") {
-              delivered = true;
-              printWindow.receiveCvPayload(payloadMessage.payload);
-              return;
-            }
-          } catch (directError) {
-            // Some browser/security contexts block direct property access across windows.
-            directDeliveryAllowed = false;
-            console.warn("Direct print payload delivery unavailable, switching to postMessage", directError);
-          }
-        }
-        try {
-          printWindow.postMessage(payloadMessage, "*");
-        } catch (deliveryError) {
-          console.warn("Failed to deliver print payload via postMessage", deliveryError);
-        }
-      };
-
-      const onMessage = function (event) {
-        if (event.source !== printWindow) {
-          return;
-        }
-        const data = event.data;
-        if (!data || typeof data !== "object") {
-          return;
-        }
-        if (data.type === "cv-print-ready") {
-          tryDeliver();
-          return;
-        }
-        if (data.type === "cv-print-received") {
-          cleanup();
-          resolve();
-          return;
-        }
-        if (data.type === "cv-print-request-payload") {
-          tryDeliver();
-          return;
-        }
-      };
-
-      window.addEventListener("message", onMessage);
-      if (!printWindow) {
-        cleanup();
-        reject(new Error("print window blocked"));
-        return;
+  async function ensureJsPdf() {
+    if (window.jspdf && typeof window.jspdf.jsPDF === "function") {
+      return window.jspdf;
+    }
+    if (jsPdfLoadPromise) {
+      await jsPdfLoadPromise;
+      if (window.jspdf && typeof window.jspdf.jsPDF === "function") {
+        return window.jspdf;
       }
+      throw new Error("jsPDF missing");
+    }
 
-      tryDeliver();
-      resendTimerId = window.setInterval(function () {
-        if (!delivered) {
-          tryDeliver();
-        }
-      }, 350);
-      closedTimerId = window.setInterval(function () {
-        if (printWindow.closed) {
-          cleanup();
-          reject(new Error("print window closed"));
-        }
-      }, 500);
+    const candidates = [
+      "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+      "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js",
+      "https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"
+    ];
 
-      timerId = window.setTimeout(function () {
-        cleanup();
-        reject(new Error("print window timeout"));
-      }, 20000);
+    jsPdfLoadPromise = (async function () {
+      let lastError = null;
+      for (let i = 0; i < candidates.length; i += 1) {
+        const url = candidates[i];
+        try {
+          await loadExternalScript(url, 12000);
+          if (window.jspdf && typeof window.jspdf.jsPDF === "function") {
+            return;
+          }
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      if (lastError) {
+        throw lastError;
+      }
+      throw new Error("jsPDF missing");
+    })();
+
+    try {
+      await jsPdfLoadPromise;
+    } finally {
+      jsPdfLoadPromise = null;
+    }
+
+    if (!(window.jspdf && typeof window.jspdf.jsPDF === "function")) {
+      throw new Error("jsPDF missing");
+    }
+    return window.jspdf;
+  }
+
+  function exportPagesToPdf(pageImages, fileName) {
+    const jspdf = window.jspdf;
+    if (!jspdf || typeof jspdf.jsPDF !== "function" || !pageImages.length) {
+      return false;
+    }
+
+    const pdf = new jspdf.jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    pageImages.forEach(function (page, index) {
+      if (index > 0) {
+        pdf.addPage();
+      }
+      const sourceWidth = Number(page.width) || 1;
+      const sourceHeight = Number(page.height) || 1;
+      const widthScale = pageWidth / sourceWidth;
+      const heightScale = pageHeight / sourceHeight;
+      const fitScale = Math.min(widthScale, heightScale);
+      const drawWidth = sourceWidth * fitScale;
+      const drawHeight = sourceHeight * fitScale;
+      const drawX = (pageWidth - drawWidth) / 2;
+      const drawY = (pageHeight - drawHeight) / 2;
+      pdf.addImage(page.src, "PNG", drawX, drawY, drawWidth, drawHeight, undefined, "FAST");
     });
+
+    pdf.save(fileName || "lebenslauf.pdf");
+    return true;
+  }
+
+  async function exportPdf(fileName) {
+    await ensureJsPdf();
+    const payloadMessage = await buildPrintPayload(fileName);
+    const pageImages = payloadMessage && payloadMessage.payload ? payloadMessage.payload.pageImages : [];
+    if (!Array.isArray(pageImages) || !pageImages.length) {
+      throw new Error("no page images generated");
+    }
+    if (!exportPagesToPdf(pageImages, fileName)) {
+      throw new Error("pdf export failed");
+    }
   }
 
   let activeDragState = null;
@@ -2962,13 +2951,9 @@
     downloadPdfBtn.textContent = "PDF wird erstellt...";
 
     const fileNameBase = stateFileNameBase();
-    const printWindow = openPrintWindow();
 
     try {
-      if (!printWindow) {
-        throw new Error("print window blocked");
-      }
-      await exportPdf((fileNameBase || "lebenslauf") + ".pdf", printWindow);
+      await exportPdf((fileNameBase || "lebenslauf") + ".pdf");
     } catch (error) {
       console.error(error);
       window.alert(

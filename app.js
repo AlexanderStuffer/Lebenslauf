@@ -9,6 +9,9 @@
       address: "",
       birthDate: "",
       website: "",
+      drivingLicenseClasses: "",
+      drivingLicenseCustom: "",
+      drivingLicensePlacement: "sidebar",
       photoUrl: "",
       photoDataUrl: "",
       summary: "",
@@ -129,6 +132,7 @@
     { id: "internships", label: "Praktika" },
     { id: "projects", label: "Projekte" },
     { id: "skills", label: "Skills" },
+    { id: "drivingLicense", label: "Fuehrerschein" },
     { id: "languages", label: "Sprachen" },
     { id: "knowledge", label: "Kenntnisse" },
     { id: "strengths", label: "Stärken" },
@@ -161,6 +165,7 @@
     showInternships: false,
     showEducation: true,
     showSkills: true,
+    showDrivingLicense: true,
     showLanguages: true,
     showKnowledge: true,
     showStrengths: true,
@@ -361,6 +366,22 @@
       .filter(Boolean);
   }
 
+  function setMultiSelectValues(selectElement, values) {
+    if (!(selectElement instanceof HTMLSelectElement)) {
+      return;
+    }
+    const selectedValues = new Set(
+      (Array.isArray(values) ? values : [])
+        .map(function (item) {
+          return String(item || "").trim();
+        })
+        .filter(Boolean)
+    );
+    Array.from(selectElement.options).forEach(function (option) {
+      option.selected = selectedValues.has(option.value);
+    });
+  }
+
   function formatPeriod(start, end) {
     const s = String(start || "").trim();
     const e = String(end || "").trim();
@@ -542,6 +563,9 @@
       address: textOrEmpty(source.address),
       birthDate: textOrEmpty(source.birthDate),
       website: textOrEmpty(source.website),
+      drivingLicenseClasses: parseCommaList(Array.isArray(source.drivingLicenseClasses) ? source.drivingLicenseClasses.join(",") : source.drivingLicenseClasses).join(", "),
+      drivingLicenseCustom: textOrEmpty(source.drivingLicenseCustom),
+      drivingLicensePlacement: sanitizeOption(textOrEmpty(source.drivingLicensePlacement) || "sidebar", ["sidebar", "content"], "sidebar"),
       photoUrl: textOrEmpty(source.photoUrl),
       photoDataUrl: textOrEmpty(source.photoDataUrl),
       summary: textOrEmpty(source.summary),
@@ -1309,6 +1333,20 @@
         return `<span class="skill-tag">${escapeHtml(item)}</span>`;
       })
       .join("");
+    const drivingLicenseClassItems = parseCommaList(state.basics.drivingLicenseClasses);
+    const drivingLicenseCustomItems = String(state.basics.drivingLicenseCustom || "")
+      .split(/\r?\n|,/)
+      .map(function (item) {
+        return item.trim();
+      })
+      .filter(Boolean);
+    const drivingLicenseItems = Array.from(new Set(drivingLicenseClassItems.concat(drivingLicenseCustomItems)));
+    const drivingLicenseTags = drivingLicenseItems
+      .map(function (item) {
+        return `<span class="skill-tag">${escapeHtml(item)}</span>`;
+      })
+      .join("");
+    const drivingLicensePlacement = sanitizeOption(state.basics.drivingLicensePlacement, ["sidebar", "content"], "sidebar");
 
     const photoMarkup = visible.showPhoto && photoSource
       ? wrapLayoutElement(
@@ -1545,6 +1583,17 @@
     `
         )
       : "";
+    const drivingLicenseSection = visible.showDrivingLicense
+      ? wrapLayoutElement(
+          "drivingLicense",
+          `
+      <section class="cv-section">
+        <h3>F&uuml;hrerschein</h3>
+        ${drivingLicenseTags ? `<div class="skill-list">${drivingLicenseTags}</div>` : '<p class="muted-empty">Kein F&uuml;hrerschein eingetragen.</p>'}
+      </section>
+    `
+        )
+      : "";
 
     const languageSection = visible.showLanguages
       ? wrapLayoutElement(
@@ -1642,10 +1691,13 @@
     `
         )
       : "";
+    const sidebarDrivingLicenseSection = drivingLicensePlacement === "sidebar" ? drivingLicenseSection : "";
+    const contentDrivingLicenseSection = drivingLicensePlacement === "content" ? drivingLicenseSection : "";
 
     const sidebarMarkup = `
       <aside class="cv-sidebar">
         ${skillsSection}
+        ${sidebarDrivingLicenseSection}
         ${languageSection}
         ${knowledgeSection}
         ${strengthsSection}
@@ -1755,6 +1807,7 @@
         ${projectSection}
         ${volunteerSection}
         ${referencesSection}
+        ${contentDrivingLicenseSection}
         ${contentCustomSection}
       </section>
     `;
@@ -1779,6 +1832,7 @@
 
     const hasSidebarContent = Boolean(
       skillsSection ||
+        sidebarDrivingLicenseSection ||
         languageSection ||
         knowledgeSection ||
         strengthsSection ||
@@ -1796,6 +1850,7 @@
         projectSection ||
         volunteerSection ||
         referencesSection ||
+        contentDrivingLicenseSection ||
         contentCustomSection
     );
     if (!hasSidebarContent || !hasMainContent) {
@@ -1807,6 +1862,7 @@
 
     const activeSectionCount = [
       skillsSection,
+      sidebarDrivingLicenseSection,
       languageSection,
       knowledgeSection,
       strengthsSection,
@@ -1822,6 +1878,7 @@
       projectSection,
       volunteerSection,
       referencesSection,
+      contentDrivingLicenseSection,
       contentCustomSection
     ].filter(Boolean).length;
     let autoSpacingClass = "";
@@ -1870,6 +1927,19 @@
     state.basics.address = String(formData.get("address") || "");
     state.basics.birthDate = String(formData.get("birthDate") || "");
     state.basics.website = String(formData.get("website") || "");
+    state.basics.drivingLicenseClasses = formData
+      .getAll("driversLicenseClasses")
+      .map(function (value) {
+        return String(value || "").trim();
+      })
+      .filter(Boolean)
+      .join(", ");
+    state.basics.drivingLicenseCustom = String(formData.get("driversLicenseCustom") || "");
+    state.basics.drivingLicensePlacement = sanitizeOption(
+      String(formData.get("driversLicensePlacement") || "sidebar"),
+      ["sidebar", "content"],
+      "sidebar"
+    );
     state.basics.photoUrl = String(formData.get("photoUrl") || "");
     state.basics.summary = String(formData.get("summary") || "");
     state.basics.skills = String(formData.get("skills") || "");
@@ -1922,6 +1992,13 @@
     form.elements.address.value = state.basics.address;
     form.elements.birthDate.value = state.basics.birthDate;
     form.elements.website.value = state.basics.website;
+    setMultiSelectValues(form.elements.driversLicenseClasses, parseCommaList(state.basics.drivingLicenseClasses));
+    form.elements.driversLicenseCustom.value = state.basics.drivingLicenseCustom;
+    form.elements.driversLicensePlacement.value = sanitizeOption(
+      state.basics.drivingLicensePlacement,
+      ["sidebar", "content"],
+      "sidebar"
+    );
     form.elements.photoUrl.value = state.basics.photoUrl;
     form.elements.summary.value = state.basics.summary;
     form.elements.skills.value = state.basics.skills;
@@ -1971,6 +2048,9 @@
       address: "Musterweg 1, 12345 Beispielstadt",
       birthDate: "01.01.1990",
       website: "https://portfolio-demo.test",
+      drivingLicenseClasses: "B, BE",
+      drivingLicenseCustom: "Staplerschein",
+      drivingLicensePlacement: "sidebar",
       photoUrl: "https://dummyimage.com/600x800/e5e7eb/4b5563.png&text=Demo+Foto",
       photoDataUrl: "",
       summary:

@@ -480,11 +480,17 @@ textarea {
 
 .cv-layout-element {
   position: relative;
+  margin-top: var(--el-space-before, 0px);
   width: min(100%, var(--el-width, 100%));
   max-width: 100%;
   transform: translate(var(--el-x, 0px), var(--el-y, 0px));
   font-size: var(--el-font-size, 100%);
   line-height: var(--el-line-height, 1.4);
+}
+
+.cv-sidebar > .cv-layout-element + .cv-layout-element,
+.cv-content > .cv-layout-element + .cv-layout-element {
+  margin-top: calc(var(--section-top-gap, 8px) + var(--el-space-before, 0px));
 }
 
 .cv-paper.layout-edit-mode .cv-layout-element {

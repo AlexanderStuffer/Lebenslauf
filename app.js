@@ -47,6 +47,7 @@
       backgroundColor: "#ffffff",
       textColor: "#1a202c",
       density: "1",
+      sectionTopGap: "8",
       layoutElement: "profile",
       elementDragEnabled: false,
       elementLayouts: {},
@@ -72,17 +73,21 @@
   const downloadPdfBtn = document.getElementById("downloadPdfBtn");
   const resetDemoBtn = document.getElementById("resetDemoBtn");
   const layoutElementInput = document.getElementById("layoutElement");
+  const sectionTopGapInput = document.getElementById("sectionTopGap");
+  const sectionTopGapValue = document.getElementById("sectionTopGapValue");
   const elementOffsetXInput = document.getElementById("elementOffsetX");
   const elementOffsetYInput = document.getElementById("elementOffsetY");
   const elementWidthInput = document.getElementById("elementWidth");
   const elementFontSizeInput = document.getElementById("elementFontSize");
   const elementLineHeightInput = document.getElementById("elementLineHeight");
+  const elementSpaceBeforeInput = document.getElementById("elementSpaceBefore");
   const elementDragEnabledInput = document.getElementById("elementDragEnabled");
   const elementOffsetXValue = document.getElementById("elementOffsetXValue");
   const elementOffsetYValue = document.getElementById("elementOffsetYValue");
   const elementWidthValue = document.getElementById("elementWidthValue");
   const elementFontSizeValue = document.getElementById("elementFontSizeValue");
   const elementLineHeightValue = document.getElementById("elementLineHeightValue");
+  const elementSpaceBeforeValue = document.getElementById("elementSpaceBeforeValue");
   const resetElementLayoutBtn = document.getElementById("resetElementLayoutBtn");
   const resetAllElementLayoutsBtn = document.getElementById("resetAllElementLayoutsBtn");
 
@@ -105,17 +110,21 @@
     !downloadPdfBtn ||
     !resetDemoBtn ||
     !layoutElementInput ||
+    !sectionTopGapInput ||
+    !sectionTopGapValue ||
     !elementOffsetXInput ||
     !elementOffsetYInput ||
     !elementWidthInput ||
     !elementFontSizeInput ||
     !elementLineHeightInput ||
+    !elementSpaceBeforeInput ||
     !elementDragEnabledInput ||
     !elementOffsetXValue ||
     !elementOffsetYValue ||
     !elementWidthValue ||
     !elementFontSizeValue ||
     !elementLineHeightValue ||
+    !elementSpaceBeforeValue ||
     !resetElementLayoutBtn ||
     !resetAllElementLayoutsBtn
   ) {
@@ -222,7 +231,8 @@
       y: 0,
       width: 100,
       fontSize: 100,
-      lineHeight: 140
+      lineHeight: 140,
+      spaceBefore: 0
     };
   }
 
@@ -241,7 +251,8 @@
       y: Math.round(safeNumber(raw.y, 0, -220, 220)),
       width: Math.round(safeNumber(raw.width, 100, 45, 120)),
       fontSize: Math.round(safeNumber(raw.fontSize, 100, 70, 150)),
-      lineHeight: Math.round(safeNumber(raw.lineHeight, 140, 90, 220))
+      lineHeight: Math.round(safeNumber(raw.lineHeight, 140, 90, 220)),
+      spaceBefore: Math.round(safeNumber(raw.spaceBefore, 0, 0, 48))
     };
   }
 
@@ -281,7 +292,8 @@
       "--el-y:" + layout.y + "px",
       "--el-width:" + layout.width + "%",
       "--el-font-size:" + layout.fontSize + "%",
-      "--el-line-height:" + (layout.lineHeight / 100).toFixed(2)
+      "--el-line-height:" + (layout.lineHeight / 100).toFixed(2),
+      "--el-space-before:" + layout.spaceBefore + "px"
     ].join(";");
   }
 
@@ -339,6 +351,7 @@
     elementWidthInput.value = String(layout.width);
     elementFontSizeInput.value = String(layout.fontSize);
     elementLineHeightInput.value = String(layout.lineHeight);
+    elementSpaceBeforeInput.value = String(layout.spaceBefore);
     elementDragEnabledInput.checked = Boolean(state.custom.elementDragEnabled);
 
     elementOffsetXValue.textContent = layout.x + " px";
@@ -346,6 +359,7 @@
     elementWidthValue.textContent = layout.width + " %";
     elementFontSizeValue.textContent = layout.fontSize + " %";
     elementLineHeightValue.textContent = (layout.lineHeight / 100).toFixed(2);
+    elementSpaceBeforeValue.textContent = layout.spaceBefore + " px";
   }
 
   function parseCommaList(value) {
@@ -722,6 +736,7 @@
       backgroundColor: textOrEmpty(source.backgroundColor) || "#ffffff",
       textColor: textOrEmpty(source.textColor) || "#1a202c",
       density: sanitizeOption(textOrEmpty(source.density) || "1", ["0", "1", "2"], "1"),
+      sectionTopGap: String(Math.round(safeNumber(source.sectionTopGap, 8, 0, 48))),
       layoutElement: sanitizeOption(textOrEmpty(source.layoutElement) || "profile", layoutElementIds, "profile"),
       elementDragEnabled: Boolean(source.elementDragEnabled),
       elementLayouts: normalizeElementLayoutsMap(source.elementLayouts),
@@ -1569,6 +1584,7 @@
     previewPaper.style.setProperty("--cv-primary", state.custom.primaryColor);
     previewPaper.style.setProperty("--cv-bg", state.custom.backgroundColor);
     previewPaper.style.setProperty("--cv-text", state.custom.textColor);
+    previewPaper.style.setProperty("--section-top-gap", Math.round(safeNumber(state.custom.sectionTopGap, 8, 0, 48)) + "px");
     previewPaper.style.setProperty("--photo-wrap-width", photoWidth + "px");
     previewPaper.style.setProperty("--photo-wrap-height", photoHeight + "px");
     previewPaper.dataset.activeLayoutElement = selectedLayoutElementId();
@@ -1979,6 +1995,7 @@
     state.custom.backgroundColor = String(formData.get("backgroundColor") || "#ffffff");
     state.custom.textColor = String(formData.get("textColor") || "#1a202c");
     state.custom.density = String(formData.get("density") || "1");
+    state.custom.sectionTopGap = String(Math.round(safeNumber(formData.get("sectionTopGap"), 8, 0, 48)));
     state.custom.layoutElement = sanitizeOption(String(formData.get("layoutElement") || state.custom.layoutElement || "profile"), layoutElementIds, "profile");
     state.custom.elementDragEnabled = formData.get("elementDragEnabled") === "on";
     ensureVisibilitySettings();
@@ -1993,7 +2010,10 @@
     selectedLayout.width = Math.round(safeNumber(formData.get("elementWidth"), selectedLayout.width, 45, 120));
     selectedLayout.fontSize = Math.round(safeNumber(formData.get("elementFontSize"), selectedLayout.fontSize, 70, 150));
     selectedLayout.lineHeight = Math.round(safeNumber(formData.get("elementLineHeight"), selectedLayout.lineHeight, 90, 220));
+    selectedLayout.spaceBefore = Math.round(safeNumber(formData.get("elementSpaceBefore"), selectedLayout.spaceBefore, 0, 48));
 
+    sectionTopGapInput.value = state.custom.sectionTopGap;
+    sectionTopGapValue.textContent = state.custom.sectionTopGap + " px";
     updateElementControlsFromState();
   }
 
@@ -2038,6 +2058,8 @@
     form.elements.backgroundColor.value = state.custom.backgroundColor;
     form.elements.textColor.value = state.custom.textColor;
     form.elements.density.value = state.custom.density;
+    form.elements.sectionTopGap.value = String(Math.round(safeNumber(state.custom.sectionTopGap, 8, 0, 48)));
+    sectionTopGapValue.textContent = form.elements.sectionTopGap.value + " px";
     form.elements.layoutElement.value = selectedLayoutElementId();
     form.elements.elementDragEnabled.checked = Boolean(state.custom.elementDragEnabled);
     ensureVisibilitySettings();
@@ -2250,6 +2272,7 @@
       backgroundColor: "#ffffff",
       textColor: "#1a202c",
       density: "1",
+      sectionTopGap: "8",
       layoutElement: "profile",
       elementDragEnabled: false,
       elementLayouts: createDefaultElementLayouts(),
@@ -2493,6 +2516,230 @@
     );
   }
 
+  function isPdfVisibleTextNode(textNode) {
+    const parent = textNode.parentElement;
+    if (!parent || parent.closest("script, style, template, option")) {
+      return false;
+    }
+    let current = parent;
+    while (current && current !== document.documentElement) {
+      const style = window.getComputedStyle(current);
+      if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") {
+        return false;
+      }
+      current = current.parentElement;
+    }
+    return true;
+  }
+
+  function rectRelativeToRoot(rect, rootRect) {
+    return {
+      left: rect.left - rootRect.left,
+      top: rect.top - rootRect.top,
+      width: rect.width,
+      height: rect.height
+    };
+  }
+
+  function addPdfTextChar(lines, item) {
+    const centerY = item.top + item.height / 2;
+    let target = null;
+    for (let i = 0; i < lines.length; i += 1) {
+      const line = lines[i];
+      const tolerance = Math.max(2, Math.min(6, Math.max(line.height, item.height) * 0.35));
+      if (Math.abs(line.centerY - centerY) <= tolerance) {
+        target = line;
+        break;
+      }
+    }
+
+    if (!target) {
+      target = {
+        centerY: centerY,
+        height: item.height,
+        items: []
+      };
+      lines.push(target);
+    }
+
+    target.items.push(item);
+    target.height = Math.max(target.height, item.height);
+    target.centerY =
+      target.items.reduce(function (sum, charItem) {
+        return sum + charItem.top + charItem.height / 2;
+      }, 0) / target.items.length;
+  }
+
+  function collectPdfTextRunsForNode(textNode, rootRect) {
+    const text = textNode.nodeValue || "";
+    if (!text.trim() || !isPdfVisibleTextNode(textNode)) {
+      return [];
+    }
+
+    const parent = textNode.parentElement;
+    const style = window.getComputedStyle(parent);
+    const fontSize = safeNumber(Number.parseFloat(style.fontSize), 12, 1, 200);
+    const lines = [];
+    const range = document.createRange();
+
+    for (let index = 0; index < text.length; index += 1) {
+      const char = text.charAt(index);
+      if (char === "\r" || char === "\n") {
+        continue;
+      }
+
+      try {
+        range.setStart(textNode, index);
+        range.setEnd(textNode, index + 1);
+      } catch (rangeError) {
+        continue;
+      }
+
+      const rects = Array.from(range.getClientRects()).filter(function (rect) {
+        return rect.width > 0.05 && rect.height > 0.05;
+      });
+      if (!rects.length) {
+        continue;
+      }
+
+      const rect = rects[0];
+      const relativeRect = rectRelativeToRoot(rect, rootRect);
+      addPdfTextChar(lines, {
+        char: char,
+        index: index,
+        left: relativeRect.left,
+        top: relativeRect.top,
+        width: relativeRect.width,
+        height: relativeRect.height
+      });
+    }
+
+    if (typeof range.detach === "function") {
+      range.detach();
+    }
+
+    return lines
+      .map(function (line) {
+        const items = line.items.slice().sort(function (a, b) {
+          return a.index - b.index;
+        });
+        let first = 0;
+        let last = items.length - 1;
+        while (first <= last && !items[first].char.trim()) {
+          first += 1;
+        }
+        while (last >= first && !items[last].char.trim()) {
+          last -= 1;
+        }
+        if (first > last) {
+          return null;
+        }
+
+        const visibleItems = items.slice(first, last + 1);
+        const textValue = visibleItems
+          .map(function (item) {
+            return item.char;
+          })
+          .join("")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (!textValue) {
+          return null;
+        }
+
+        const left = Math.min.apply(
+          null,
+          visibleItems.map(function (item) {
+            return item.left;
+          })
+        );
+        const top = Math.min.apply(
+          null,
+          visibleItems.map(function (item) {
+            return item.top;
+          })
+        );
+        const right = Math.max.apply(
+          null,
+          visibleItems.map(function (item) {
+            return item.left + item.width;
+          })
+        );
+        const bottom = Math.max.apply(
+          null,
+          visibleItems.map(function (item) {
+            return item.top + item.height;
+          })
+        );
+
+        return {
+          text: textValue,
+          left: left,
+          top: top,
+          width: right - left,
+          height: bottom - top,
+          fontSize: fontSize,
+          fontFamily: style.fontFamily || "",
+          fontWeight: style.fontWeight || "400",
+          fontStyle: style.fontStyle || "normal"
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function collectPdfTextRuns(root, rootRect) {
+    const runs = [];
+    const walker = document.createTreeWalker(
+      root,
+      4,
+      {
+        acceptNode: function (node) {
+          return node.nodeValue && node.nodeValue.trim() ? 1 : 2;
+        }
+      }
+    );
+    let node = walker.nextNode();
+    while (node) {
+      runs.push.apply(runs, collectPdfTextRunsForNode(node, rootRect));
+      node = walker.nextNode();
+    }
+    return runs;
+  }
+
+  function collectPdfLinks(root, rootRect) {
+    const links = [];
+    Array.from(root.querySelectorAll("a[href]")).forEach(function (anchor) {
+      const href = String(anchor.href || anchor.getAttribute("href") || "").trim();
+      if (!href || /^javascript:/i.test(href)) {
+        return;
+      }
+      Array.from(anchor.getClientRects()).forEach(function (rect) {
+        if (rect.width <= 0 || rect.height <= 0) {
+          return;
+        }
+        const relativeRect = rectRelativeToRoot(rect, rootRect);
+        links.push({
+          href: href,
+          left: relativeRect.left,
+          top: relativeRect.top,
+          width: relativeRect.width,
+          height: relativeRect.height
+        });
+      });
+    });
+    return links;
+  }
+
+  function collectPdfOverlay(root, pageHeightCss) {
+    const rootRect = root.getBoundingClientRect();
+    return {
+      captureScale: 1,
+      pageHeightCss: pageHeightCss,
+      textRuns: collectPdfTextRuns(root, rootRect),
+      links: collectPdfLinks(root, rootRect)
+    };
+  }
+
   function sliceCanvasIntoPages(canvas) {
     const pageHeight = (canvas.width * 297) / 210;
     const pages = [];
@@ -2518,7 +2765,8 @@
       pages.push({
         src: pageCanvas.toDataURL("image/png"),
         width: pageCanvas.width,
-        height: pageCanvas.height
+        height: pageCanvas.height,
+        sourceY: y
       });
       y = nextY;
       pageIndex += 1;
@@ -2706,6 +2954,7 @@
         });
       });
 
+      const pdfOverlay = collectPdfOverlay(exportPaper, exportMinHeight);
       let canvas = null;
       try {
         canvas = await renderCanvasWithTimeout(
@@ -2748,12 +2997,14 @@
       if (!pageImages.length) {
         throw new Error("no page images generated");
       }
+      pdfOverlay.captureScale = canvas.width / Math.max(1, exportPaper.scrollWidth || exportWidth);
 
       return {
         type: "cv-print-payload",
         payload: {
           fileName: fileName,
-          pageImages: pageImages
+          pageImages: pageImages,
+          pdfOverlay: pdfOverlay
         }
       };
     } finally {
@@ -2812,7 +3063,83 @@
     return window.jspdf;
   }
 
-  function exportPagesToPdf(pageImages, fileName) {
+  function pdfFontForRun(run) {
+    const family = String(run.fontFamily || "").toLowerCase();
+    const weight = String(run.fontWeight || "").toLowerCase();
+    const style = String(run.fontStyle || "").toLowerCase();
+    const isBold = weight === "bold" || Number.parseInt(weight, 10) >= 600;
+    const isItalic = style.includes("italic") || style.includes("oblique");
+    const fontName = family.includes("mono") ? "courier" : family.includes("serif") && !family.includes("sans") ? "times" : "helvetica";
+    const fontStyle = isBold && isItalic ? "bolditalic" : isBold ? "bold" : isItalic ? "italic" : "normal";
+    return {
+      name: fontName,
+      style: fontStyle
+    };
+  }
+
+  function isOverlayItemOnPage(item, page, captureScale) {
+    const pageTop = (Number(page.sourceY) || 0) / captureScale;
+    const pageBottom = pageTop + (Number(page.height) || 0) / captureScale;
+    return item.top < pageBottom && item.top + item.height > pageTop;
+  }
+
+  function addPdfTextOverlay(pdf, page, placement, overlay) {
+    const textRuns = overlay && Array.isArray(overlay.textRuns) ? overlay.textRuns : [];
+    if (!textRuns.length) {
+      return;
+    }
+
+    const captureScale = Math.max(0.01, Number(overlay.captureScale) || 1);
+    const sourceWidth = Math.max(1, Number(page.width) || 1);
+    const cssToPdfScale = (placement.drawWidth * captureScale) / sourceWidth;
+    const pageTop = (Number(page.sourceY) || 0) / captureScale;
+
+    pdf.setTextColor(0, 0, 0);
+    textRuns.forEach(function (run) {
+      if (!run || !run.text || !isOverlayItemOnPage(run, page, captureScale)) {
+        return;
+      }
+      const font = pdfFontForRun(run);
+      pdf.setFont(font.name, font.style);
+      pdf.setFontSize(Math.max(1, run.fontSize * cssToPdfScale));
+      pdf.text(
+        run.text,
+        placement.drawX + run.left * cssToPdfScale,
+        placement.drawY + (run.top - pageTop) * cssToPdfScale,
+        {
+          baseline: "top",
+          renderingMode: "invisible"
+        }
+      );
+    });
+  }
+
+  function addPdfLinkOverlay(pdf, page, placement, overlay) {
+    const links = overlay && Array.isArray(overlay.links) ? overlay.links : [];
+    if (!links.length || typeof pdf.link !== "function") {
+      return;
+    }
+
+    const captureScale = Math.max(0.01, Number(overlay.captureScale) || 1);
+    const sourceWidth = Math.max(1, Number(page.width) || 1);
+    const cssToPdfScale = (placement.drawWidth * captureScale) / sourceWidth;
+    const pageTop = (Number(page.sourceY) || 0) / captureScale;
+
+    links.forEach(function (link) {
+      if (!link || !link.href || !isOverlayItemOnPage(link, page, captureScale)) {
+        return;
+      }
+      pdf.link(
+        placement.drawX + link.left * cssToPdfScale,
+        placement.drawY + (link.top - pageTop) * cssToPdfScale,
+        Math.max(1, link.width * cssToPdfScale),
+        Math.max(1, link.height * cssToPdfScale),
+        { url: link.href }
+      );
+    });
+  }
+
+  function exportPagesToPdf(pageImages, fileName, overlay) {
     const jspdf = window.jspdf;
     if (!jspdf || typeof jspdf.jsPDF !== "function" || !pageImages.length) {
       return false;
@@ -2836,6 +3163,14 @@
       const drawX = (pageWidth - drawWidth) / 2;
       const drawY = (pageHeight - drawHeight) / 2;
       pdf.addImage(page.src, "PNG", drawX, drawY, drawWidth, drawHeight, undefined, "FAST");
+      const placement = {
+        drawX: drawX,
+        drawY: drawY,
+        drawWidth: drawWidth,
+        drawHeight: drawHeight
+      };
+      addPdfTextOverlay(pdf, page, placement, overlay);
+      addPdfLinkOverlay(pdf, page, placement, overlay);
     });
 
     pdf.save(fileName || "lebenslauf.pdf");
@@ -2845,11 +3180,12 @@
   async function exportPdf(fileName) {
     await ensureJsPdf();
     const payloadMessage = await buildPrintPayload(fileName);
-    const pageImages = payloadMessage && payloadMessage.payload ? payloadMessage.payload.pageImages : [];
+    const payload = payloadMessage && payloadMessage.payload ? payloadMessage.payload : {};
+    const pageImages = payload.pageImages || [];
     if (!Array.isArray(pageImages) || !pageImages.length) {
       throw new Error("no page images generated");
     }
-    if (!exportPagesToPdf(pageImages, fileName)) {
+    if (!exportPagesToPdf(pageImages, fileName, payload.pdfOverlay)) {
       throw new Error("pdf export failed");
     }
   }
